@@ -49,8 +49,8 @@ class Adaline():
         The net_input. Shape = [Num samples,]
         '''
         net_input = features @ self.get_wts() + self.b
-        
-        return np.squeeze(net_input)
+    
+        return net_input
 
     def activation(self, net_in):
         '''
@@ -198,6 +198,13 @@ class Adaline():
             net_act = self.activation(net_in)
             errors = y - net_act
             #next we find the gradient
+            
+            #find loss/acc
+            loss = self.compute_loss(y, net_act) #float
+            self.loss_history.append(loss)
+            acc = self.compute_accuracy(y,self.predict(features))
+            self.accuracy_history.append(acc)
+            
             gradient_b, gradient_w = self.gradient(errors, features)
             #and we want to step in lr*gradient for each feature
             w_step = lr*gradient_w #STEP_j = lr(-sum(error_i)x_ij)
@@ -205,13 +212,9 @@ class Adaline():
             
             self.wts = self.get_wts()-w_step #we negate the gradient to "walk down" the hill
             #UPDATE BIAS
-            self.bias = self.get_bias()-b_step#SOMETHING
-            
-            #find loss/acc
-            loss = self.compute_loss(y, net_act) #float
-            self.loss_history.append(loss)
-            
-        return self.loss_history, np.array([self.compute_accuracy(y,self.predict(features))])
+            self.b = self.get_bias()-b_step#SOMETHING
+    
+        return self.loss_history, self.accuracy_history 
             
             
             
