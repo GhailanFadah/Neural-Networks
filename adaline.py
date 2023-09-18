@@ -19,9 +19,9 @@ class Adaline():
         # Bias: will be a scalar
         self.b = None
         # Record of training loss. Will be a list. Value at index i corresponds to loss on epoch i.
-        self.loss_history = None
+        self.loss_history = []
         # Record of training accuracy. Will be a list. Value at index i corresponds to acc. on epoch i.
-        self.accuracy_history = None
+        self.accuracy_history = []
 
 
     def get_wts(self):
@@ -48,7 +48,6 @@ class Adaline():
         ----------
         The net_input. Shape = [Num samples,]
         '''
-        
         net_input = features @ self.get_wts() + self.b
         
         return np.squeeze(net_input)
@@ -67,7 +66,7 @@ class Adaline():
         net_act. ndarray. Shape = [Num samples N,]
         '''
         
-        net_act = net_in
+        net_act = net_in*1
         
         return net_act
         
@@ -87,8 +86,7 @@ class Adaline():
         float. The SSE loss (across a single training epoch).
         '''
         
-        L = 1/2 * np.sum((y - net_act)**2)
-        
+        L = 1/2 * np.sum((y - net_act)**2, axis = 0)
         return L
         
 
@@ -130,8 +128,8 @@ class Adaline():
             Gradient with respect to the neuron weights in the input feature layer
         '''
         
-        
-        return np.sum(-errors), -errors @ features
+        #returns in form bias, weights
+        return -np.sum(errors), -(errors.T @ features)
         
 
     def predict(self, features):
@@ -190,7 +188,7 @@ class Adaline():
         '''
         
         self.b = np.random.normal(0, 0.01)
-        self.wts = np.random.normal(0, 0.01)
+        self.wts = np.random.normal(0, 0.01, features.shape[1])
         
         for i in range(n_epochs):
             #now we want to undergo the main training loop
@@ -198,20 +196,22 @@ class Adaline():
             net_in = self.net_input(features)
             #then net act
             net_act = self.activation(net_in)
-            #find error/loss (assuming combined in loss method)
-            loss = self.compute_loss(y, net_act)
-            #FIND ACCURACY ACROSS SINGLE EPOCH
+            errors = y - net_act
             #next we find the gradient
-            gradient = self.gradient(loss, features)
+            gradient_b, gradient_w = self.gradient(errors, features)
             #and we want to step in lr*gradient for each feature
-            w_step = lr*gradient #STEP_j = lr(-sum(error_i)x_ij)
-            b_step = lr*gradient #STEP_j = lr(-sum(error_i)) where error_i = y_i-netAct_i
+            w_step = lr*gradient_w #STEP_j = lr(-sum(error_i)x_ij)
+            b_step = lr*gradient_b #STEP_j = lr(-sum(error_i)) where error_i = y_i-netAct_i
             
             self.wts = self.get_wts()-w_step #we negate the gradient to "walk down" the hill
             #UPDATE BIAS
             self.bias = self.get_bias()-b_step#SOMETHING
             
-            pass
+            #find loss/acc
+            loss = self.compute_loss(y, net_act) #float
+            self.loss_history.append(loss)
+            
+        return self.loss_history, np.array([self.compute_accuracy(y,self.predict(features))])
             
             
             
