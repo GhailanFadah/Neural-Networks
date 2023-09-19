@@ -85,7 +85,6 @@ class Adaline():
         ----------
         float. The SSE loss (across a single training epoch).
         '''
-        
         L = 1/2 * np.sum((y - net_act)**2, axis = 0)
         return L
         
