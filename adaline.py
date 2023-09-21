@@ -217,9 +217,9 @@ class Adaline():
             
             
             
-            
 class Perceptron(Adaline):
     def activation(self, netIn):
         netAct = np.where(netIn >= 0 , 1, -1)
         return netAct
+        
         
