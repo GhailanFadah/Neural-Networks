@@ -17,7 +17,7 @@ class AdalineLogistic(Adaline):
         net_act. ndarray. Shape = [Num samples N,]
         '''
 
-        net_act = (1+np.exp(-net_in))**-1
+        net_act = 1/(1+np.exp(-net_in))
         return net_act
 
 
