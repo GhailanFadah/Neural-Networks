@@ -26,6 +26,14 @@ def preprocess_stl(imgs, labels):
     3) Treating the pixels as features, standardize the features "seperately"
     4) Fix class labeling. Should span 0, 1, ..., 9 NOT 1,2,...10
     '''
+    
+    labels
+    imgs = np.float64(imgs)
+    
+    c = imgs.shape[1] * imgs.shape[2] * imgs.shape[3]
+    flat_img = np.reshape(imgs, (imgs.shape[0], c))
+    
+    return flat_img, labels
     pass
 
 
