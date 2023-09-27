@@ -27,13 +27,14 @@ def preprocess_stl(imgs, labels):
     4) Fix class labeling. Should span 0, 1, ..., 9 NOT 1,2,...10
     '''
     
-    labels
+    labels = np.subtract(labels, np.ones(5000,))
     imgs = np.float64(imgs)
     
     c = imgs.shape[1] * imgs.shape[2] * imgs.shape[3]
     flat_img = np.reshape(imgs, (imgs.shape[0], c))
+    st_flat_img = (flat_img - flat_img.mean(axis = 0))/(flat_img.std(axis = 0))
     
-    return flat_img, labels
+    return st_flat_img,  labels.astype(int)
     pass
 
 
@@ -68,7 +69,17 @@ def create_splits(data, y, n_train_samps=3500, n_test_samps=500, n_valid_samps=5
         samps = n_train_samps + n_test_samps + n_valid_samps + n_dev_samps
         print(f'Error! Num samples {samps} does not equal num images {len(data)}!')
         return
-    pass
+    
+    x_train = data[0:n_train_samps, :]
+    y_train = y[0:n_train_samps]
+    x_test = data[n_train_samps:n_train_samps+n_test_samps, :]
+    y_test = y[n_train_samps:n_train_samps+n_test_samps]
+    x_val = data[n_train_samps+n_test_samps:n_train_samps+n_test_samps+n_valid_samps, :]
+    y_val = y[n_train_samps+n_test_samps:n_train_samps+n_test_samps+n_valid_samps]
+    x_dev = data[n_train_samps+n_test_samps+n_valid_samps:n_train_samps+n_test_samps+n_valid_samps+n_dev_samps]
+    y_dev = y[n_train_samps+n_test_samps+n_valid_samps:n_train_samps+n_test_samps+n_valid_samps+n_dev_samps]
+    
+    return x_train, y_train, x_test, y_test, x_val, y_val, x_dev, y_dev
 
 
 def load_stl10(n_train_samps=3500, n_test_samps=500, n_valid_samps=500, n_dev_samps=500):
@@ -89,4 +100,8 @@ def load_stl10(n_train_samps=3500, n_test_samps=500, n_valid_samps=500, n_dev_sa
     x_dev (development samples),
     y_dev (development labels)
     '''
-    pass
+    stl_labels = np.load("numpy/labels.npy")
+    stl_imgs = np.load("numpy/images.npy")
+    stl_imgs, stl_labels = preprocess_stl(stl_imgs, stl_labels)
+    return create_splits(stl_imgs, stl_labels, n_train_samps, n_test_samps, n_valid_samps, n_dev_samps)
+
