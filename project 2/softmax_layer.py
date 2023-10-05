@@ -55,7 +55,6 @@ class SoftmaxLayer:
         -----------
         net_input: ndarray. shape=(N, C)
         '''
-        print(features.shape, self.wts.shape)
         net_in = features @ self.wts + self.b
         return net_in
     
@@ -145,30 +144,37 @@ class SoftmaxLayer:
         self.b = np.random.normal(0, 0.01, num_classes)
 
         self.wts = np.reshape(np.random.normal(0, 0.01, num_classes*num_features), (num_features,num_classes))
+
+        
         
         for epoch in range(n_epochs):
             for batch_n in range(int((num_samps)/mini_batch_sz)):
                 
                 batch_inds = np.random.randint(0,num_classes,mini_batch_sz)
                 mb_X = features[batch_inds]
+
                 mb_y = self.one_hot(y[batch_inds],num_classes)
 
                 #STILL NEED TO HANDLE EDGE CASE FOR BATCH SIZE = 1
                 net_in = self.net_in(mb_X)
                 net_act = self.activation(net_in)
-                loss = self.loss(net_act,mb_y, reg)
+                loss = self.loss(net_act,y[batch_inds], reg)
                 loss_history.append(loss)
 
                 #BACKPROP
-                gradient_b, gradient_w = self.gradient(mb_X, net_act, mb_y, reg)
+                gradient_w, gradient_b = self.gradient(mb_X, net_act, mb_y, reg)
                 
                 w_step = lr*gradient_w 
                 b_step = lr*gradient_b 
             
-                self.wts = self.get_wts()-w_step 
-                self.b = self.get_bias()-b_step
+                self.wts = self.wts-w_step 
+                self.b = self.b-b_step
 
-        pass
+            if epoch % 100 == 0 and verbose > 0:
+                print("epoch: "+str(epoch)+" ------ loss: "+str(loss_history[-1]))
+
+        print("epoch: "+str(epoch+1)+" ------ loss: "+str(loss_history[-1]))
+        return loss_history
 
     def predict(self, features):
         '''Predicts the int-coded class value for network inputs ('features').
@@ -242,8 +248,7 @@ class SoftmaxLayer:
         
         
         #get array of net_act[y]
-        corrects = net_act[np.arange(net_act.shape[0]), y]
-        
+        corrects = net_act[np.arange(net_act.shape[0]), y.astype(int)]
         #cross-entropy loss with bias term from 9/20 class
         loss = -(1/y.size)*np.sum(np.log(corrects))+(1/2)*reg*np.sum(self.wts**2)
         return loss
