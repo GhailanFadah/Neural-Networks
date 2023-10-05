@@ -150,7 +150,7 @@ class SoftmaxLayer:
                 
                 batch_inds = np.random.randint(0,num_classes,mini_batch_sz)
                 mb_X = features[batch_inds]
-                mb_y = self.one_hot(y[batch_inds])
+                mb_y = self.one_hot(y[batch_inds],np.max(y)+1)
 
                 #HANDLE EDGE CASE FOR BATCH SIZE = 1
                 net_in = self.net_in(features)
@@ -271,7 +271,7 @@ class SoftmaxLayer:
         errors = net_act - y
         mini_batch_size = net_act.shape[0]
 
-        return (-1/mini_batch_size)*np.sum(errors), (-1/mini_batch_size)*(errors.T @ features)
+        return  (1/mini_batch_size)*(errors.T @ features).T+reg*(self.wts**2), ((1/mini_batch_size)*np.sum(errors, axis = 0))
 
     def test_loss(self, wts, b, features, labels):
         ''' Tester method for net_in and loss
