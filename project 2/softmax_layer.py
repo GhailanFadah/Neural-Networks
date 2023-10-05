@@ -182,6 +182,8 @@ class SoftmaxLayer:
             Note: You can figure out the predicted class assignments from net_in (i.e. you dont
             need to apply the net activation function — it will not affect the most active neuron).
         '''
+        
+        
         pass
 
     def activation(self, net_in):
@@ -203,10 +205,10 @@ class SoftmaxLayer:
         - np.sum and np.max have a keepdims optional parameter that might be useful for avoiding
         going from shape=(X, Y) -> (X,). keepdims ensures the result has shape (X, 1).
         '''
-        z_max = np.max(net_in)
-        denom= np.sum(np.exp(net_in-z_max))
+        z_max = np.max(net_in, axis = 1, keepdims=True)
+        adj_net = net_in - z_max
 
-        net_act = (net_in-z_max)/(denom)
+        net_act = np.exp(adj_net)/np.sum(np.exp(adj_net), axis=1, keepdims=True)
         return net_act
 
     def loss(self, net_act, y, reg=0):
@@ -232,12 +234,17 @@ class SoftmaxLayer:
         - NO FOR LOOPS!
         - Remember to add on the regularization term, which has a 1/2 in front of it.
         '''
-
+        
+        
+        print(y)
         #get array of net_act[y]
-        corrects = net_act[y]
+        corrects = net_act[np.arange(net_act.shape[0]), y]
+        
         #cross-entropy loss with bias term from 9/20 class
-        loss = (1/y.size)*np.sum(np.log(corrects))+(1/2)*reg*(np.sum((self.wts)**2))
+        loss = -(1/y.size)*np.sum(np.log(corrects))+(1/2)*reg*np.sum(self.wts**2)
         return loss
+    
+        
 
     def gradient(self, features, net_act, y, reg=0):
         '''Computes the gradient of the softmax version of the net
