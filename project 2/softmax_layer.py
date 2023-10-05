@@ -184,7 +184,10 @@ class SoftmaxLayer:
             Note: You can figure out the predicted class assignments from net_in (i.e. you dont
             need to apply the net activation function — it will not affect the most active neuron).
         '''
+        net_in = self.net_in(features)
+        y_pred = np.argmax(net_in, axis=1)
         
+        return y_pred
         
         pass
 
