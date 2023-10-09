@@ -173,7 +173,7 @@ class SoftmaxLayer:
             if epoch % 100 == 0 and verbose > 0:
                 print("epoch: "+str(epoch)+" ------ loss: "+str(loss_history[-1]))
 
-        print("epoch: "+str(epoch+1)+" ------ loss: "+str(loss_history[-1]))
+        #print("epoch: "+str(epoch+1)+" ------ loss: "+str(loss_history[-1]))
         return loss_history
 
     def predict(self, features):
@@ -194,8 +194,7 @@ class SoftmaxLayer:
         y_pred = np.argmax(net_in, axis=1)
         
         return y_pred
-        
-        pass
+    
 
     def activation(self, net_in):
         '''Applies the softmax activation function on the net_in.
