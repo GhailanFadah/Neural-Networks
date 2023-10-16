@@ -397,7 +397,33 @@ class MLP:
         '''
         num_samps, num_features = features.shape
         num_classes = self.num_output_units
-        pass
+        loss_history = []
+        if resume_training != True:
+            self.initialize_wts
+            
+        for epoch in range(n_epochs):
+            for batch_n in range(int((num_samps)/mini_batch_sz)):
+                
+                batch_inds = np.random.randint(0,num_classes-1,mini_batch_sz)
+                print(num_classes)
+                print(batch_inds)
+                print(features)
+                mb_X = features[batch_inds]
+
+                mb_y = self.one_hot(y[batch_inds],num_classes)
+                y_net_in, y_net_act, z_net_in, z_net_act, loss = self.forward(mb_X, mb_y, reg)
+                loss_history.append(loss)
+                
+                dy_wts, dy_b, dz_wts, dz_b = self.backward(mb_X, mb_y, y_net_in, y_net_act, z_net_in, z_net_act, reg)
+                self.dy_wts -= (dy_wts*lr)
+                self.dy_b -= (dy_b*lr)
+                self.dz_wts -= (dz_wts*lr)
+                self.dz_b -= (dz_b*lr)
+                
+            if epoch % 100 == 0 and verbose > 0:
+                print("epoch: "+str(epoch)+" ------ loss: "+str(loss_history[-1]))
+        return loss_history
+        
 
 
 class MLP2(MLP):
