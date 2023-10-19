@@ -322,7 +322,10 @@ class MLP:
         
         # computes dy_netAct
         dy_net_act = np.dot(dz_net_act, self.z_wts.T)
+        
+        # applies gradient for hidden function
         dy_net_act[y_net_in <= 0] = 0
+        
         # computes dy_wts and dy_b
         dy_wts = np.dot(features.T, dy_net_act) / len(y)
         dy_b = np.sum(dy_net_act, axis=0) / len(y)
@@ -458,6 +461,7 @@ class MLP2(MLP):
         
 
         super().__init__(num_input_units, num_hidden_units, num_output_units)
+        self.hidden_fun = hidden_act_fun
         pass
 
     def forward(self, features, y, reg=0):
@@ -486,7 +490,26 @@ class MLP2(MLP):
         - You should only need to add/modify a small number lines of code to your existing `forward` method code from MLP
         - Loops of any kind are NOT ALLOWED in this method!
         '''
-        pass
+        
+        y_net_in = features @ self.y_wts + self.y_b
+        
+        
+        if self.hidden_fun == "sigmoid":
+            y_net_act = 1/(1+np.exp(-y_net_in)) 
+        elif self.hidden_fun == "elu":
+            y_net_act = np.where(y_net_in<0,np.exp(y_net_in),y_net_in)  # works for test but doesn't use the "-1" in the formula. ASK!!!
+        else:
+            y_net_act = np.where(y_net_in<0,0,y_net_in)
+    
+        
+        z_net_in = y_net_act @ self.z_wts + self.z_b 
+        z_net_act = self.activation(z_net_in)
+        
+        loss = self.loss(z_net_act, y, self.z_wts,self.y_wts, reg)
+        
+        
+        return y_net_in, y_net_act, z_net_in, z_net_act, loss
+    
 
     def backward(self, features, y, y_net_in, y_net_act, z_net_in, z_net_act, reg=0):
         '''Performs a backward pass (output -> hidden -> input) during training to update the weights. This function
@@ -518,4 +541,37 @@ class MLP2(MLP):
         - When implementing the new hidden activation gradients, don't forget to chain them with the upstream gradient
         (like usual).
         '''
-        pass
+        
+         # creates array 
+        dy_wts = np.zeros_like(self.y_wts)
+        dy_b = np.zeros_like(self.y_b)
+        dz_wts = np.zeros_like(self.z_wts)
+        dz_b = np.zeros_like(self.z_b)
+        
+        # computes dz_netAct
+        dz_net_act = z_net_act - self.one_hot(y.astype(int), z_net_act.shape[1])
+        # computes dz_wts and dz_b using dz_netAct
+        dz_wts = np.dot(y_net_act.T, dz_net_act) / len(y)
+        dz_b = np.sum(dz_net_act, axis=0) / len(y)
+        
+        # computes dy_netAct
+        dy_net_act = np.dot(dz_net_act, self.z_wts.T)
+        
+        # computes hidden layer function gradient
+        if self.hidden_fun == "sigmoid":
+            dy_net_act = y_net_in*(1-y_net_in)
+        elif self.hidden_fun == "elu":
+            dy_net_act[y_net_in <= 0] = np.exp(y_net_in)
+        else:
+
+            dy_net_act[y_net_in <= 0] = 0
+        # computes dy_wts and dy_b
+        dy_wts = np.dot(features.T, dy_net_act) / len(y)
+        dy_b = np.sum(dy_net_act, axis=0) / len(y)
+        
+        # add reg term
+        dz_wts += reg * self.z_wts
+        dy_wts += reg * self.y_wts
+        
+        return dy_wts, dy_b, dz_wts, dz_b
+        
