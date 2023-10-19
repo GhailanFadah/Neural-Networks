@@ -308,6 +308,37 @@ class MLP:
         - Regularize each layer's weights like usual.
         '''
         
+        dz_net_act = - (1/z_net_act.shape[0])* (z_net_act - self.one_hot(y, z_net_act.shape[1]))
+   
+        dz_net_in = dz_net_act* (z_net_act*(self.one_hot(y, z_net_act.shape[1])) -z_net_act) 
+        
+        dz_wts = (dz_net_in.T @ y_net_act).T
+      
+        dz_b = np.sum(dz_net_in, axis=0)
+    
+        
+        dy_net_act = dz_net_in @ self.z_wts.T
+        print(y_net_act.shape)
+        
+        x = np.copy(dy_net_act)
+        
+        x[y_net_in <= 0] = 0
+        x[y_net_in > 0] = 1
+    
+        print(dy_net_act.shape)
+        dy_net_in = dy_net_act * x
+    
+        dy_wts = (dy_net_in.T @ features).T
+        dy_b = np.sum(dy_net_in, axis=0)
+        
+        
+        # add reg term
+        dz_wts += reg * self.z_wts
+        dy_wts += reg * self.y_wts
+        
+        return dy_wts, dy_b, dz_wts, dz_b
+        
+    ''' 
         # creates array 
         dy_wts = np.zeros_like(self.y_wts)
         dy_b = np.zeros_like(self.y_b)
@@ -337,7 +368,7 @@ class MLP:
         
         return dy_wts, dy_b, dz_wts, dz_b
         
-        pass
+    '''
 
     def fit(self, features, y, x_validation, y_validation,
             resume_training=False, n_epochs=500, lr=0.0001, mini_batch_sz=256, reg=0, verbose=2, print_every=100):
@@ -542,8 +573,6 @@ class MLP2(MLP):
         - When implementing the new hidden activation gradients, don't forget to chain them with the upstream gradient
         (like usual).
         '''
-        
-        # creates array 
       
         
         # computes dz_netAct
