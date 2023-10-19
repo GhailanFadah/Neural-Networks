@@ -308,9 +308,9 @@ class MLP:
         - Regularize each layer's weights like usual.
         '''
         
-        dz_net_act = - (1/z_net_act.shape[0])* (z_net_act - self.one_hot(y, z_net_act.shape[1]))
+        dz_net_act = - (1/z_net_act.shape[0])* (z_net_act - self.one_hot(y.astype(int), z_net_act.shape[1]))
    
-        dz_net_in = dz_net_act* (z_net_act*(self.one_hot(y, z_net_act.shape[1])) -z_net_act) 
+        dz_net_in = dz_net_act* (z_net_act*(self.one_hot(y.astype(int), z_net_act.shape[1])) -z_net_act) 
         
         dz_wts = (dz_net_in.T @ y_net_act).T
       
@@ -318,14 +318,12 @@ class MLP:
     
         
         dy_net_act = dz_net_in @ self.z_wts.T
-        print(y_net_act.shape)
         
         x = np.copy(dy_net_act)
         
         x[y_net_in <= 0] = 0
         x[y_net_in > 0] = 1
     
-        print(dy_net_act.shape)
         dy_net_in = dy_net_act * x
     
         dy_wts = (dy_net_in.T @ features).T
@@ -459,8 +457,8 @@ class MLP:
             acc_train.append(self.accuracy(y, self.predict(features)))
             acc_val.append(self.accuracy(y_validation, self.predict( x_validation))) 
 
-            if epoch % 100 == 0 and verbose > 0:
-                print("epoch: "+str(epoch)+" ------ loss: "+str(loss_history[-1]))
+            if epoch % print_every == 0 and verbose > 0:
+                print("epoch: "+str(epoch)+" ------ loss: "+str(loss_history[-1])+ " \n------ train acc:"+ str(acc_train[-1])+ " ------ val acc: "+ str(acc_val[-1])+"\n")
 
 
         return loss_history, acc_train, acc_val
