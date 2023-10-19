@@ -325,6 +325,7 @@ class MLP:
         
         # applies gradient for hidden function
         dy_net_act[y_net_in <= 0] = 0
+       
         
         # computes dy_wts and dy_b
         dy_wts = np.dot(features.T, dy_net_act) / len(y)
@@ -542,32 +543,33 @@ class MLP2(MLP):
         (like usual).
         '''
         
-         # creates array 
-        dy_wts = np.zeros_like(self.y_wts)
-        dy_b = np.zeros_like(self.y_b)
-        dz_wts = np.zeros_like(self.z_wts)
-        dz_b = np.zeros_like(self.z_b)
+        # creates array 
+      
         
         # computes dz_netAct
-        dz_net_act = z_net_act - self.one_hot(y.astype(int), z_net_act.shape[1])
-        # computes dz_wts and dz_b using dz_netAct
-        dz_wts = np.dot(y_net_act.T, dz_net_act) / len(y)
-        dz_b = np.sum(dz_net_act, axis=0) / len(y)
+        dz_net_act = - (1/y_net_in.shape[0])* (1/z_net_act)
+   
+        dz_net_in = dz_net_act* (z_net_act*(self.one_hot(y, z_net_act.shape[1])) -z_net_act) 
         
-        # computes dy_netAct
-        dy_net_act = np.dot(dz_net_act, self.z_wts.T)
+        dz_wts = (dz_net_in.T @ y_net_act).T
+      
+        dz_b = np.sum(dz_net_in, axis=0)
+    
         
-        # computes hidden layer function gradient
-        if self.hidden_fun == "sigmoid":
-            dy_net_act = y_net_in*(1-y_net_in)
-        elif self.hidden_fun == "elu":
-            dy_net_act[y_net_in <= 0] = np.exp(y_net_in)
-        else:
-
-            dy_net_act[y_net_in <= 0] = 0
-        # computes dy_wts and dy_b
-        dy_wts = np.dot(features.T, dy_net_act) / len(y)
-        dy_b = np.sum(dy_net_act, axis=0) / len(y)
+        dy_net_act = dz_net_in @ self.z_wts.T
+        print(y_net_act.shape)
+        
+        x = np.copy(dy_net_act)
+        
+        x[y_net_in <= 0] = 0
+        x[y_net_in > 0] = 1
+    
+        print(dy_net_act.shape)
+        dy_net_in = dy_net_act * x
+    
+        dy_wts = (dy_net_in.T @ features).T
+        dy_b = np.sum(dy_net_in, axis=0)
+        
         
         # add reg term
         dz_wts += reg * self.z_wts
