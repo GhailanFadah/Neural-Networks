@@ -455,6 +455,8 @@ class MLP2(MLP):
 
         TODO: Define and set an instance variable for the hidden layer activation function.
         '''
+        
+
         super().__init__(num_input_units, num_hidden_units, num_output_units)
         pass
 
