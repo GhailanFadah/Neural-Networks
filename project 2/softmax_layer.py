@@ -75,8 +75,8 @@ class SoftmaxLayer:
 
         y_one_hot = np.zeros((y.shape[0], num_classes))
         i = 0
-        for int in y:  
-            y_one_hot[i,int] = 1
+        for ing in y:  
+            y_one_hot[i,ing] = 1
             i+=1
         
         return y_one_hot
@@ -150,7 +150,7 @@ class SoftmaxLayer:
         for epoch in range(n_epochs):
             for batch_n in range(int((num_samps)/mini_batch_sz)):
                 
-                batch_inds = np.random.randint(0,num_classes,mini_batch_sz)
+                batch_inds = np.random.randint(0,num_samps,mini_batch_sz)#unsure if num_samps should be something else
                 mb_X = features[batch_inds]
 
                 mb_y = self.one_hot(y[batch_inds],num_classes)

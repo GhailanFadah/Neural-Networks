@@ -110,8 +110,8 @@ class MLP:
         
         y_one_hot = np.zeros((y.shape[0], num_classes))
         i = 0
-        for int in y:  
-            y_one_hot[i,int] = 1
+        for ing in y:  
+            y_one_hot[i,ing] = 1
             i+=1
         
         return y_one_hot
@@ -165,7 +165,7 @@ class MLP:
         net_act = np.exp(adj_net)/np.sum(np.exp(adj_net), axis=1, keepdims=True)
         return net_act
     
-    def loss(self, net, y, wts_1, wts_2, reg=0):
+    def loss(self, net_act, y, wts_1, wts_2, reg=0):
         '''Computes the cross-entropy loss
 
         Parameters:
@@ -191,8 +191,10 @@ class MLP:
         
         
         #get array of net_act[y]
-        corrects = net[np.arange(net.shape[0]), y.astype(int)]
+        corrects = net_act[np.arange(net_act.shape[0]), y.astype(int)]
         #cross-entropy loss with bias term from 9/20 class
+        
+        #THERE IS AN ISSUE WHEN WE GET NETACT = 0 SINCE WE CANT TAKE LOG(0)
         loss = -(1/y.size)*np.sum(np.log(corrects))+(1/2)*reg*(np.sum(wts_1**2) + np.sum(wts_2**2))
         return loss
 
@@ -313,7 +315,7 @@ class MLP:
         dz_b = np.zeros_like(self.z_b)
         
         # computes dz_netAct
-        dz_net_act = z_net_act - self.one_hot(y, z_net_act.shape[1])
+        dz_net_act = z_net_act - self.one_hot(y.astype(int), z_net_act.shape[1])
         # computes dz_wts and dz_b using dz_netAct
         dz_wts = np.dot(y_net_act.T, dz_net_act) / len(y)
         dz_b = np.sum(dz_net_act, axis=0) / len(y)
@@ -398,31 +400,35 @@ class MLP:
         num_samps, num_features = features.shape
         num_classes = self.num_output_units
         loss_history = []
+        acc_train = []
+        acc_val = []
         if resume_training != True:
             self.initialize_wts
             
         for epoch in range(n_epochs):
             for batch_n in range(int((num_samps)/mini_batch_sz)):
                 
-                batch_inds = np.random.randint(0,num_classes-1,mini_batch_sz)
-                print(num_classes)
-                print(batch_inds)
-                print(features)
+                batch_inds = np.random.randint(0,num_samps,mini_batch_sz)
                 mb_X = features[batch_inds]
-
                 mb_y = self.one_hot(y[batch_inds],num_classes)
-                y_net_in, y_net_act, z_net_in, z_net_act, loss = self.forward(mb_X, mb_y, reg)
+                y_net_in, y_net_act, z_net_in, z_net_act, loss = self.forward(mb_X, y[batch_inds], reg)
                 loss_history.append(loss)
+
                 
                 dy_wts, dy_b, dz_wts, dz_b = self.backward(mb_X, mb_y, y_net_in, y_net_act, z_net_in, z_net_act, reg)
-                self.dy_wts -= (dy_wts*lr)
-                self.dy_b -= (dy_b*lr)
-                self.dz_wts -= (dz_wts*lr)
-                self.dz_b -= (dz_b*lr)
-                
+                self.y_wts -= (dy_wts*lr)
+                self.y_b -= (dy_b*lr)
+                self.z_wts -= (dz_wts*lr)
+                self.z_b -= (dz_b*lr)
+
+            acc_train.append(self.accuracy(y, self.predict(features)))
+            acc_val.append(self.accuracy(y_validation, self.predict( x_validation))) 
+
             if epoch % 100 == 0 and verbose > 0:
                 print("epoch: "+str(epoch)+" ------ loss: "+str(loss_history[-1]))
-        return loss_history
+
+
+        return loss_history, acc_train, acc_val
         
 
 
