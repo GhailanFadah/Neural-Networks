@@ -307,10 +307,11 @@ class MLP:
         NOTE:
         - Regularize each layer's weights like usual.
         '''
-        
-        dz_net_act = - (1/z_net_act.shape[0])* (z_net_act - self.one_hot(y.astype(int), z_net_act.shape[1]))
+        N = z_net_act.shape[0]
+        C = z_net_act.shape[1]
+        dz_net_act = - (1/z_net_act)* 1/N
    
-        dz_net_in = dz_net_act* (z_net_act*(self.one_hot(y.astype(int), z_net_act.shape[1])) -z_net_act) 
+        dz_net_in = dz_net_act* z_net_act *((self.one_hot(y.astype(int), C))-z_net_act) 
         
         dz_wts = (dz_net_in.T @ y_net_act).T
       
