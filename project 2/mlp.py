@@ -243,35 +243,7 @@ class MLP:
         
         return y_net_in, y_net_act, z_net_in, z_net_act, loss
         
-    def gradient(self, features, net_act, y, reg=0):
-        '''Computes the gradient of the softmax version of the net
-
-        Parameters:
-        -----------
-        features: ndarray. net inputs. shape=(mini-batch-size, Num features)
-        net_act: ndarray. net outputs. shape=(mini-batch-size, C)
-            In the softmax network, net_act for each input has the interpretation that
-            it is a probability that the input belongs to each of the C output classes.
-        y: ndarray. one-hot coded class labels. shape=(mini-batch-size, Num output neurons)
-        reg: float. regularization strength.
-
-        Returns:
-        -----------
-        grad_wts: ndarray. Weight gradient. shape=(Num features, C)
-        grad_b: ndarray. Bias gradient. shape=(C,)
-
-        NOTE:
-        - Gradient is the same as ADALINE, except we average over mini-batch in both wts and bias.
-        - NO FOR LOOPS!
-        - Don't forget regularization!!!! (Weights only, not for bias)
-        '''
-        errors = net_act - y
-        mini_batch_size = net_act.shape[0]
-
-        return  (1/mini_batch_size)*(errors.T @ features).T+reg*(self.z_wts**2)
-
-        
-        
+    
 
     def backward(self, features, y, y_net_in, y_net_act, z_net_in, z_net_act, reg=0):
         '''Performs a backward pass (output -> hidden -> input) during training to update the weights. This function
@@ -418,7 +390,7 @@ class MLP:
                 loss_history.append(loss)
 
                 
-                dy_wts, dy_b, dz_wts, dz_b = self.backward(mb_X, mb_y, y_net_in, y_net_act, z_net_in, z_net_act, reg)
+                dy_wts, dy_b, dz_wts, dz_b = self.backward(mb_X, y[batch_inds], y_net_in, y_net_act, z_net_in, z_net_act, reg)
                 self.y_wts -= (dy_wts*lr)
                 self.y_b -= (dy_b*lr)
                 self.z_wts -= (dz_wts*lr)
