@@ -110,7 +110,7 @@ class MLP:
         
         y_one_hot = np.zeros((y.shape[0], num_classes))
         i = 0
-        for ing in y:  
+        for ing in y.astype(int):  
             y_one_hot[i,ing] = 1
             i+=1
         
@@ -241,7 +241,6 @@ class MLP:
         
         loss = self.loss(z_net_act, y, self.z_wts,self.y_wts, reg)
         
-        
         return y_net_in, y_net_act, z_net_in, z_net_act, loss
         
     def gradient(self, features, net_act, y, reg=0):
@@ -311,14 +310,14 @@ class MLP:
         C = z_net_act.shape[1]
         dz_net_act = - (1/z_net_act)* 1/N
    
-        dz_net_in = dz_net_act* z_net_act *((self.one_hot(y.astype(int), C))-z_net_act) 
+        dz_net_in = dz_net_act*(z_net_act*(self.one_hot(y, z_net_act.shape[1]) - z_net_act))
         
         dz_wts = (dz_net_in.T @ y_net_act).T
       
         dz_b = np.sum(dz_net_in, axis=0)
     
         
-        dy_net_act = dz_net_in @ self.z_wts.T
+        dy_net_act = dz_net_in @ (self.z_wts).T
         
         x = np.copy(dy_net_act)
         
@@ -337,37 +336,7 @@ class MLP:
         
         return dy_wts, dy_b, dz_wts, dz_b
         
-    ''' 
-        # creates array 
-        dy_wts = np.zeros_like(self.y_wts)
-        dy_b = np.zeros_like(self.y_b)
-        dz_wts = np.zeros_like(self.z_wts)
-        dz_b = np.zeros_like(self.z_b)
-        
-        # computes dz_netAct
-        dz_net_act = z_net_act - self.one_hot(y.astype(int), z_net_act.shape[1])
-        # computes dz_wts and dz_b using dz_netAct
-        dz_wts = np.dot(y_net_act.T, dz_net_act) / len(y)
-        dz_b = np.sum(dz_net_act, axis=0) / len(y)
-        
-        # computes dy_netAct
-        dy_net_act = np.dot(dz_net_act, self.z_wts.T)
-        
-        # applies gradient for hidden function
-        dy_net_act[y_net_in <= 0] = 0
-       
-        
-        # computes dy_wts and dy_b
-        dy_wts = np.dot(features.T, dy_net_act) / len(y)
-        dy_b = np.sum(dy_net_act, axis=0) / len(y)
-        
-        # add reg term
-        dz_wts += reg * self.z_wts
-        dy_wts += reg * self.y_wts
-        
-        return dy_wts, dy_b, dz_wts, dz_b
-        
-    '''
+    
 
     def fit(self, features, y, x_validation, y_validation,
             resume_training=False, n_epochs=500, lr=0.0001, mini_batch_sz=256, reg=0, verbose=2, print_every=100):
@@ -528,7 +497,7 @@ class MLP2(MLP):
         if self.hidden_fun == "sigmoid":
             y_net_act = 1/(1+np.exp(-y_net_in)) 
         elif self.hidden_fun == "elu":
-            y_net_act = np.where(y_net_in<0,np.exp(y_net_in),y_net_in)  # works for test but doesn't use the "-1" in the formula. ASK!!!
+            y_net_act = np.where(y_net_in<0,np.exp(y_net_in)-1,y_net_in)  # works for test but doesn't use the "-1" in the formula. ASK!!!
         else:
             y_net_act = np.where(y_net_in<0,0,y_net_in)
     
@@ -572,27 +541,31 @@ class MLP2(MLP):
         - When implementing the new hidden activation gradients, don't forget to chain them with the upstream gradient
         (like usual).
         '''
-      
-        
-        # computes dz_netAct
-        dz_net_act = - (1/y_net_in.shape[0])* (1/z_net_act)
+        N = z_net_act.shape[0]
+        C = z_net_act.shape[1]
+        dz_net_act = - (1/z_net_act)* 1/N
    
-        dz_net_in = dz_net_act* (z_net_act*(self.one_hot(y, z_net_act.shape[1])) -z_net_act) 
+        dz_net_in = dz_net_act*(z_net_act*(self.one_hot(y, z_net_act.shape[1]) - z_net_act))
         
         dz_wts = (dz_net_in.T @ y_net_act).T
       
         dz_b = np.sum(dz_net_in, axis=0)
     
         
-        dy_net_act = dz_net_in @ self.z_wts.T
-        print(y_net_act.shape)
+        dy_net_act = dz_net_in @ (self.z_wts).T
         
         x = np.copy(dy_net_act)
         
-        x[y_net_in <= 0] = 0
-        x[y_net_in > 0] = 1
+        if self.hidden_fun == "elu":
+            x = np.where(y_net_in<0,np.exp(y_net_in),y_net_in)
+            x[y_net_in >= 0] = 1
+        elif self.hidden_fun == "relu":
+            
+            x[y_net_in <= 0] = 0
+            x[y_net_in > 0] = 1
+        else:
+            x = y_net_act*(1-y_net_act)
     
-        print(dy_net_act.shape)
         dy_net_in = dy_net_act * x
     
         dy_wts = (dy_net_in.T @ features).T
@@ -604,4 +577,3 @@ class MLP2(MLP):
         dy_wts += reg * self.y_wts
         
         return dy_wts, dy_b, dz_wts, dz_b
-        
