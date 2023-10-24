@@ -8,7 +8,7 @@ Project 2: Multilayer Perceptrons
 import numpy as np
 
 
-class MLP:
+class MLP_extension:
     '''MLP is a class for multilayer perceptron network.
 
     The structure of our MLP will be:
@@ -20,7 +20,7 @@ class MLP:
     Due to the softmax, activation of output neuron i represents the probability that the current input sample belongs
     to class i.
     '''
-    def __init__(self, num_input_units, num_hidden_units, num_output_units):
+    def __init__(self, num_input_units, num_hidden_units_1, num_hidden_units_2, num_output_units):
         '''Constructor to build the model structure and intialize the weights. There are 3 layers:
         input layer, hidden layer, and output layer. Since the input layer represents each input
         sample, we don't learn weights for it.
@@ -32,16 +32,17 @@ class MLP:
         num_output_units: int. Num output units. Equal to # data classes.
         '''
         self.num_input_units = num_input_units
-        self.num_hidden_units = num_hidden_units
+        self.num_hidden_units_1 = num_hidden_units_1
         self.num_output_units = num_output_units
+        self.num_hidden_units_2 = num_hidden_units_2
 
-        self.initialize_wts(num_input_units, num_hidden_units, num_output_units)
+        self.initialize_wts(num_input_units, num_hidden_units_1, num_hidden_units_2, num_output_units)
 
     def get_y_wts(self):
         '''Returns a copy of the hidden layer wts'''
         return self.y_wts.copy()
 
-    def initialize_wts(self, M, H, C, std=0.1):
+    def initialize_wts(self, M, H_1, H_2, C, std=0.1):
         ''' Randomly initialize the hidden and output layer weights and bias term
 
         Parameters:
@@ -71,13 +72,17 @@ class MLP:
         '''
         
         np.random.seed(0)
-        self.y_wts = np.reshape(np.random.normal(0, std, M*H),(M,H))
+        self.y1_wts = np.reshape(np.random.normal(0, std, M*H_1),(M,H_1))
         np.random.seed(1)
-        self.y_b = np.reshape(np.random.normal(0, std, H),(H,))
+        self.y1_b = np.reshape(np.random.normal(0, std, H_1),(H_1,))
         np.random.seed(2)
-        self.z_wts = np.reshape(np.random.normal(0, std, H*C),(H,C))
+        self.z_wts = np.reshape(np.random.normal(0, std, H_2*C),(H_2,C))
         np.random.seed(3)
         self.z_b = np.reshape(np.random.normal(0, std, C),(C,))
+        np.random.seed(4)
+        self.y2_wts = np.reshape(np.random.normal(0, std, H_1*H_2),(H_1,H_2))
+        np.random.seed(5)
+        self.y2_b = np.reshape(np.random.normal(0, std, H_2),(H_2,))
 
     def accuracy(self, y, y_pred):
         '''Computes the accuracy of classified samples. Proportion correct
@@ -165,7 +170,7 @@ class MLP:
         net_act = np.exp(adj_net)/np.sum(np.exp(adj_net), axis=1, keepdims=True)
         return net_act
     
-    def loss(self, net_act, y, wts_1, wts_2, reg=0):
+    def loss(self, net_act, y, wts_1, wts_2, wts_3, reg=0):
         '''Computes the cross-entropy loss
 
         Parameters:
@@ -195,7 +200,7 @@ class MLP:
         #cross-entropy loss with bias term from 9/20 class
         
         #THERE IS AN ISSUE WHEN WE GET NETACT = 0 SINCE WE CANT TAKE LOG(0)
-        loss = -(1/y.size)*np.sum(np.log(corrects))+(1/2)*reg*(np.sum(wts_1**2) + np.sum(wts_2**2))
+        loss = -(1/y.size)*np.sum(np.log(corrects))+(1/2)*reg*(np.sum(wts_1**2) + np.sum(wts_2**2) + np.sum(wts_3**2))
         return loss
 
     def forward(self, features, y, reg=0):
@@ -221,8 +226,10 @@ class MLP:
 
         Returns:
         -----------
-        y_net_in: ndarray. shape=(N, H). hidden layer "net in"
-        y_net_act: ndarray. shape=(N, H). hidden layer activation
+        y1_net_in: ndarray. shape=(N, H_1). hidden layer "net in"
+        y1_net_act: ndarray. shape=(N, H_1). hidden layer activation
+        y2_net_in: ndarray. shape=(N, H_2). hidden layer "net in"
+        y2_net_act: ndarray. shape=(N, H_2). hidden layer activation
         z_net_in: ndarray. shape=(N, C). output layer "net in"
         z_net_act: ndarray. shape=(N, C). output layer activation
         loss: float. REGULARIZED loss derived from output layer, averaged over all input samples
@@ -232,20 +239,24 @@ class MLP:
           from each set of weights (i.e. 2 in this case).
         '''
         
-        y_net_in = features @ self.y_wts + self.y_b
-        y_net_act = np.where(y_net_in<0,0,y_net_in)
-    
+        # hidden function: ReLu
+        y1_net_in = features @ self.y1_wts + self.y1_b
+        y1_net_act = np.where(y1_net_in<0,0,y1_net_in)
+
+        # hidden function: sigmoid
+        y2_net_in = y1_net_act @ self.y2_wts + self.y2_b
+        y2_net_act = 1/(1 + np.exp(-y2_net_in))
         
-        z_net_in = y_net_act @ self.z_wts + self.z_b 
+        z_net_in = y2_net_act @ self.z_wts + self.z_b 
         z_net_act = self.activation(z_net_in)
         
-        loss = self.loss(z_net_act, y, self.z_wts,self.y_wts, reg)
+        loss = self.loss(z_net_act, y, self.z_wts, self.y1_wts, self.y2_wts, reg)
         
-        return y_net_in, y_net_act, z_net_in, z_net_act, loss
+        return y1_net_in, y1_net_act, y2_net_in, y2_net_act, z_net_in, z_net_act, loss
         
     
 
-    def backward(self, features, y, y_net_in, y_net_act, z_net_in, z_net_act, reg=0):
+    def backward(self, features, y, y1_net_in, y1_net_act, y2_net_in, y2_net_act, z_net_in, z_net_act, reg=0):
         '''Performs a backward pass (output -> hidden -> input) during training to update the weights. This function
         implements the backpropogation algorithm.
 
@@ -284,29 +295,37 @@ class MLP:
    
         dz_net_in = dz_net_act*(z_net_act*(self.one_hot(y, z_net_act.shape[1]) - z_net_act))
         
-        dz_wts = (dz_net_in.T @ y_net_act).T
+        dz_wts = (dz_net_in.T @ y2_net_act).T
       
         dz_b = np.sum(dz_net_in, axis=0)
     
         
-        dy_net_act = dz_net_in @ (self.z_wts).T
+        dy2_net_act = dz_net_in @ (self.z_wts).T
         
-        x = np.copy(dy_net_act)
+    
+        dy2_net_in = dy2_net_act * (y2_net_in*(1-y2_net_in))
         
-        x[y_net_in <= 0] = 0
-        x[y_net_in > 0] = 1
+        dy2_wts = (dy2_net_in.T @ y1_net_act).T  # look at shapes  
+        dy2_b = np.sum(dy2_net_in, axis=0) 
+        
+        dy1_net_act = dy2_net_in @ self.y2_wts.T
+        
+        x = np.copy(dy1_net_act)
+        
+        x[y1_net_in <= 0] = 0
+        x[y1_net_in > 0] = 1
+        dy1_net_in = dy1_net_act * x 
     
-        dy_net_in = dy_net_act * x
-    
-        dy_wts = (dy_net_in.T @ features).T
-        dy_b = np.sum(dy_net_in, axis=0)
+        dy1_wts = (dy1_net_in.T @ features).T
+        dy1_b = np.sum(dy1_net_in, axis=0)
         
         
         # add reg term
         dz_wts += reg * self.z_wts
-        dy_wts += reg * self.y_wts
+        dy1_wts += reg * self.y1_wts
+        dy2_wts += reg * self.y2_wts
         
-        return dy_wts, dy_b, dz_wts, dz_b
+        return dy1_wts, dy1_b, dy2_wts, dy2_b, dz_wts, dz_b
         
     
 
@@ -386,13 +405,15 @@ class MLP:
                 batch_inds = np.random.randint(0,num_samps,mini_batch_sz)
                 mb_X = features[batch_inds]
                 mb_y = self.one_hot(y[batch_inds],num_classes)
-                y_net_in, y_net_act, z_net_in, z_net_act, loss = self.forward(mb_X, y[batch_inds], reg)
+                y1_net_in, y1_net_act, y2_net_in, y2_net_act, z_net_in, z_net_act, loss = self.forward(mb_X, y[batch_inds], reg)
                 loss_history.append(loss)
 
                 
-                dy_wts, dy_b, dz_wts, dz_b = self.backward(mb_X, y[batch_inds], y_net_in, y_net_act, z_net_in, z_net_act, reg)
-                self.y_wts -= (dy_wts*lr)
-                self.y_b -= (dy_b*lr)
+                dy1_wts, dy1_b, dy2_wts, dy2_b, dz_wts, dz_b = self.backward(mb_X, y[batch_inds], y1_net_in, y1_net_act, y2_net_in, y2_net_act, z_net_in, z_net_act, reg)
+                self.y1_wts -= (dy1_wts*lr)
+                self.y1_b -= (dy1_b*lr)
+                self.y2_wts -= (dy2_wts*lr)
+                self.y2_b -= (dy2_b*lr)
                 self.z_wts -= (dz_wts*lr)
                 self.z_b -= (dz_b*lr)
 
@@ -404,178 +425,3 @@ class MLP:
 
 
         return loss_history, acc_train, acc_val
-        
-
-
-class MLP2(MLP):
-    '''Multilayer Perceptron with a configurable hidden layer activation function.
-
-    Supported hidden layer activation functions:
-    - ReLU
-    - Sigmoid
-    - Exponential linear unit (ELU)
-    '''
-    def __init__(self, num_input_units, num_hidden_units, num_output_units, hidden_act_fun='relu'):
-        '''Constructor to build the model structure and intialize the weights. There are 3 layers:
-        input layer, hidden layer, and output layer. Since the input layer represents each input
-        sample, we don't learn weights for it.
-
-        Parameters:
-        -----------
-        num_input_units: int. Num input features
-        num_hidden_units: int. Num hidden units
-        num_output_units: int. Num output units. Equal to # data classes.
-        hidden_act_fun: str. String name for the hidden layer activation function.
-            Supported strings: 'relu' for ReLU, 'sigmoid' for Sigmoid, 'elu' for Exponential linear unit (ELU)
-
-        TODO: Define and set an instance variable for the hidden layer activation function.
-        '''
-        
-
-        super().__init__(num_input_units, num_hidden_units, num_output_units)
-        self.hidden_fun = hidden_act_fun
-        
-
-    def predict(self, features):
-        '''Predicts the int-coded class value for network inputs ('features').
-
-        NOTE: Loops of any kind are NOT ALLOWED in this method!
-
-        Parameters:
-        -----------
-        features: ndarray. shape=(mini-batch size, num features)
-
-        Returns:
-        -----------
-        y_pred: ndarray. shape=(mini-batch size,).
-            This is the int-coded predicted class values for the inputs passed in.
-            NOTE: You can figure out the predicted class assignments without applying the
-            softmax net activation function — it will not affect the most active neuron.
-        '''
-        y_net_in = features @ self.y_wts + self.y_b
-        
-        if self.hidden_fun == "sigmoid":
-            y_net_act = 1/(1+np.exp(-y_net_in)) 
-        elif self.hidden_fun == "elu":
-            y_net_act = np.where(y_net_in<0,np.exp(y_net_in)-1,y_net_in)  
-        else:
-            y_net_act = np.where(y_net_in<0,0,y_net_in)
-            
-        z_net_in = y_net_act @ self.z_wts + self.z_b 
-        
-        y_pred = np.argmax(z_net_in, axis=1)
-        return y_pred
-
-    def forward(self, features, y, reg=0):
-        '''Performs a forward pass of the net (input -> hidden -> output).
-
-        Parameters:
-        -----------
-        features: ndarray. net inputs. shape=(mini-batch-size N, Num features M)
-        y: ndarray. int coded class labels. shape=(mini-batch-size N,)
-        reg: float. regularization strength.
-
-        Returns:
-        -----------
-        y_net_in: ndarray. shape=(N, H). hidden layer "net in"
-        y_net_act: ndarray. shape=(N, H). hidden layer activation
-        z_net_in: ndarray. shape=(N, C). output layer "net in"
-        z_net_act: ndarray. shape=(N, C). output layer activation
-        loss: float. REGULARIZED loss derived from output layer, averaged over all input samples
-
-        TODO:
-        1. Copy-and-paste your `forward` code from the `MLP` class.
-        2. Modify your code to apply the appropriate hidden layer activation function (based on the instance variable
-        set in the constructor) to compute the hidden layer net_act. You should implement the activation functions yourself.
-
-        NOTE:
-        - You should only need to add/modify a small number lines of code to your existing `forward` method code from MLP
-        - Loops of any kind are NOT ALLOWED in this method!
-        '''
-        
-        y_net_in = features @ self.y_wts + self.y_b
-        
-        
-        if self.hidden_fun == "sigmoid":
-            y_net_act = 1/(1+np.exp(-y_net_in)) 
-        elif self.hidden_fun == "elu":
-            y_net_act = np.where(y_net_in<0,np.exp(y_net_in)-1,y_net_in)  
-        else:
-            y_net_act = np.where(y_net_in<0,0,y_net_in)
-    
-        
-        z_net_in = y_net_act @ self.z_wts + self.z_b 
-        z_net_act = self.activation(z_net_in)
-        
-        loss = self.loss(z_net_act, y, self.z_wts,self.y_wts, reg)
-        
-        
-        return y_net_in, y_net_act, z_net_in, z_net_act, loss
-    
-
-    def backward(self, features, y, y_net_in, y_net_act, z_net_in, z_net_act, reg=0):
-        '''Performs a backward pass (output -> hidden -> input) during training to update the weights. This function
-        implements the backpropogation algorithm.
-
-        Parameters:
-        -----------
-        features: ndarray. net inputs. shape=(mini-batch-size, Num features)
-        y: ndarray. int coded class labels. shape=(mini-batch-size,)
-        y_net_in: ndarray. shape=(N, H). hidden layer "net in"
-        y_net_act: ndarray. shape=(N, H). hidden layer activation
-        z_net_in: ndarray. shape=(N, C). output layer "net in"
-        z_net_act: ndarray. shape=(N, C). output layer activation
-        reg: float. regularization strength.
-
-        Returns:
-        -----------
-        dy_wts, dy_b, dz_wts, dz_b: The following backwards gradients
-        (1) hidden wts, (2) hidden bias, (3) output weights, (4) output bias
-        Shapes should match the respective wt/bias instance vars.
-
-        TODO:
-        1. Copy-and-paste your `backward` code from the `MLP` class.
-        2. Modify your code to compute the hidden layer gradient `dy_net_in` differently depending on the hidden layer
-        activation function (based on the instance variable set in the constructor).
-
-        NOTE:
-        - You should only need to add/modify a small number lines of code to your existing `backward` method code from MLP
-        - When implementing the new hidden activation gradients, don't forget to chain them with the upstream gradient
-        (like usual).
-        '''
-        N = z_net_act.shape[0]
-        C = z_net_act.shape[1]
-        dz_net_act = - (1/z_net_act)* 1/N
-   
-        dz_net_in = dz_net_act*(z_net_act*(self.one_hot(y, z_net_act.shape[1]) - z_net_act))
-        
-        dz_wts = (dz_net_in.T @ y_net_act).T
-      
-        dz_b = np.sum(dz_net_in, axis=0)
-    
-        
-        dy_net_act = dz_net_in @ (self.z_wts).T
-        
-        x = np.copy(dy_net_act)
-        
-        if self.hidden_fun == "elu":
-            x = np.where(y_net_in<0,np.exp(y_net_in),y_net_in)
-            x[y_net_in >= 0] = 1
-        elif self.hidden_fun == "relu":
-            
-            x[y_net_in <= 0] = 0
-            x[y_net_in > 0] = 1
-        else:
-            x = y_net_act*(1-y_net_act)
-    
-        dy_net_in = dy_net_act * x
-    
-        dy_wts = (dy_net_in.T @ features).T
-        dy_b = np.sum(dy_net_in, axis=0)
-        
-        
-        # add reg term
-        dz_wts += reg * self.z_wts
-        dy_wts += reg * self.y_wts
-        
-        return dy_wts, dy_b, dz_wts, dz_b
