@@ -40,7 +40,7 @@ class MLP_extension:
 
     def get_y_wts(self):
         '''Returns a copy of the hidden layer wts'''
-        return self.y_wts.copy()
+        return self.y1_wts.copy()
 
     def initialize_wts(self, M, H_1, H_2, C, std=0.1):
         ''' Randomly initialize the hidden and output layer weights and bias term
@@ -138,9 +138,14 @@ class MLP_extension:
             NOTE: You can figure out the predicted class assignments without applying the
             softmax net activation function — it will not affect the most active neuron.
         '''
-        y_net_in = features @ self.y_wts + self.y_b
-        y_net_act = np.where(y_net_in<0,0,y_net_in)
-        z_net_in = y_net_act @ self.z_wts + self.z_b 
+        y1_net_in = features @ self.y1_wts + self.y1_b
+        y1_net_act = np.where(y1_net_in<0,0,y1_net_in)
+
+        # hidden function: sigmoid
+        y2_net_in = y1_net_act @ self.y2_wts + self.y2_b
+        y2_net_act = 1/(1 + np.exp(-y2_net_in))
+        
+        z_net_in = y2_net_act @ self.z_wts + self.z_b 
         
         y_pred = np.argmax(z_net_in, axis=1)
         return y_pred
@@ -245,6 +250,8 @@ class MLP_extension:
 
         # hidden function: sigmoid
         y2_net_in = y1_net_act @ self.y2_wts + self.y2_b
+        
+        
         y2_net_act = 1/(1 + np.exp(-y2_net_in))
         
         z_net_in = y2_net_act @ self.z_wts + self.z_b 
@@ -298,7 +305,6 @@ class MLP_extension:
         dz_wts = (dz_net_in.T @ y2_net_act).T
       
         dz_b = np.sum(dz_net_in, axis=0)
-    
         
         dy2_net_act = dz_net_in @ (self.z_wts).T
         
