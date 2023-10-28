@@ -309,7 +309,7 @@ class MLP_extension:
         dy2_net_act = dz_net_in @ (self.z_wts).T
         
     
-        dy2_net_in = dy2_net_act * (y2_net_in*(1-y2_net_in))
+        dy2_net_in = dy2_net_act * (y2_net_act*(1-y2_net_act))
         
         dy2_wts = (dy2_net_in.T @ y1_net_act).T  # look at shapes  
         dy2_b = np.sum(dy2_net_in, axis=0) 
