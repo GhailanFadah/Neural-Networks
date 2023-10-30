@@ -47,17 +47,22 @@ def conv2_gray(img, kers, verbose=True):
         print('Kernels must be square!')
         return
     
-    f_Img = np.zeros((n_kers, img_y, img_x), dtype=img.dtype)
+    f_Img = np.zeros((n_kers, img_y, img_x))
     
-    padding = math.ceil(kers.shape[1] - 1 /2)
+    padding = math.ceil((ker_x - 1) /2)
 
-    rows = np.zeros((img_y, 1))
+    rows = np.zeros((img_y, padding))
     
     a = np.hstack((rows, img))
     
-    cols= np.zeros((1, a.shape[1]))
+    b = np.hstack((a, rows)) 
     
-    padded_image = np.vstack((a, cols))
+    cols= np.zeros((padding, b.shape[1]))
+    
+    c = np.vstack((b, cols))
+    
+    padded_image = np.vstack((cols, c)) 
+    
     
     for k in range(n_kers):
         kernel = kers[k]
@@ -103,7 +108,51 @@ def conv2(img, kers, verbose=True):
     be aware of which axes you are summing over. If you use keepdims=True, you may want to remove
     singleton dimensions.
     '''
-    pass
+    n_chan, img_y, img_x = img.shape
+    n_kers, ker_x, ker_y = kers.shape
+    
+    if verbose:
+        print(f'img_x={img_y}, img_y={img_x}')
+        print(f'n_kers={n_kers}, ker_x={ker_x}, ker_y={ker_y}')
+
+    if ker_x != ker_y:
+        print('Kernels must be square!')
+        return
+    
+    f_Img = np.zeros((n_kers, n_chan, img_y, img_x))
+    
+    padding = math.ceil((ker_x - 1) /2)
+
+    rows = np.zeros((img_y, padding))
+    
+    a = np.hstack((rows, img))
+    
+    b = np.hstack((a, rows)) 
+    
+    cols= np.zeros((padding, b.shape[1]))
+    
+    c = np.vstack((b, cols))
+    
+    padded_image = np.vstack((cols, c)) 
+    
+    
+    for k in range(n_kers):
+        kernel = kers[k]
+        kernel = np.flipud(np.fliplr(kernel))
+  
+    
+        for i in range(img_y):
+            for j in range(img_x):
+                region = padded_image[i:i + ker_x, j:j + ker_x]
+            
+                result = np.sum(region * kernel, axis=1)
+                print(result.shape)
+                
+                f_Img[k, i, j] = result
+            
+    return f_Img
+    
+
 
 
 def conv2nn(imgs, kers, bias, verbose=True):
