@@ -228,6 +228,10 @@ class Layer:
         # with respect to the last layer's netAct function (softmax)
         if d_upstream is None:
             d_upstream = self.compute_dlast_net_act()
+            
+            
+        
+        
 
     def compute_dlast_net_act(self):
         '''Computes the gradient of the loss function with respect to the last layer's netAct.
@@ -462,6 +466,8 @@ class Conv2D(Layer):
         have shape=(n_kers, n_chans, ker_sz, ker_sz).
         2. Initialize this layer's bias in the same way. shape=(n_kers,)
         '''
+        self.wts = np.reshape(np.random.normal(0, wt_scale, n_kers*n_chans*ker_sz*ker_sz ),(n_kers, n_chans, ker_sz, ker_sz))
+        self.b = np.reshape(np.random.normal(0, wt_scale,n_kers ),(n_kers,))
         super().__init__(number, name, activation=activation, reg=reg, verbose=verbose)
         pass
 
@@ -484,6 +490,7 @@ class Conv2D(Layer):
         Hint:
         This should be an easy one-liner, you've done all the hard work last week :)
         '''
+        
         pass
 
     def backward_netIn_to_prevLayer_netAct(self, d_upstream):

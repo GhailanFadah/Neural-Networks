@@ -6,6 +6,7 @@ CS343: Neural Networks
 Project 3: Convolutional neural networks
 '''
 import numpy as np
+import math
 
 
 def conv2_gray(img, kers, verbose=True):
@@ -37,7 +38,7 @@ def conv2_gray(img, kers, verbose=True):
     '''
     img_y, img_x = img.shape
     n_kers, ker_x, ker_y = kers.shape
-
+    
     if verbose:
         print(f'img_x={img_y}, img_y={img_x}')
         print(f'n_kers={n_kers}, ker_x={ker_x}, ker_y={ker_y}')
@@ -45,6 +46,33 @@ def conv2_gray(img, kers, verbose=True):
     if ker_x != ker_y:
         print('Kernels must be square!')
         return
+    
+    f_Img = np.zeros((n_kers, img_y, img_x), dtype=img.dtype)
+    
+    padding = math.ceil(kers.shape[1] - 1 /2)
+
+    rows = np.zeros((img_y, 1))
+    
+    a = np.hstack((rows, img))
+    
+    cols= np.zeros((1, a.shape[1]))
+    
+    padded_image = np.vstack((a, cols))
+    
+    for k in range(n_kers):
+        kernel = kers[k]
+        kernel = np.flipud(np.fliplr(kernel))
+  
+    
+        for i in range(img_y):
+            for j in range(img_x):
+                region = padded_image[i:i + ker_x, j:j + ker_x]
+            
+                result = np.sum(region * kernel)
+                
+                f_Img[k, i, j] = result
+            
+    return f_Img
 
 
 def conv2(img, kers, verbose=True):
