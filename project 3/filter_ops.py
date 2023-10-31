@@ -123,32 +123,22 @@ def conv2(img, kers, verbose=True):
     
     padding = math.ceil((ker_x - 1) /2)
 
-    rows = np.zeros((img_y, padding))
-    
-    a = np.hstack((rows, img))
-    
-    b = np.hstack((a, rows)) 
-    
-    cols= np.zeros((padding, b.shape[1]))
-    
-    c = np.vstack((b, cols))
-    
-    padded_image = np.vstack((cols, c)) 
+    padded_image = np.zeros((n_chan, img_y+2*padding, img_x+2*padding))
+    padded_image[:, padding:padding + img_y, padding:padding + img_x] = img
+
     
     
     for k in range(n_kers):
         kernel = kers[k]
         kernel = np.flipud(np.fliplr(kernel))
-  
-    
-        for i in range(img_y):
-            for j in range(img_x):
-                region = padded_image[i:i + ker_x, j:j + ker_x]
-            
-                result = np.sum(region * kernel, axis=1)
-                print(result.shape)
+        for d in range(n_chan):
+            for i in range(img_y):
+                for j in range(img_x):
+                    region = padded_image[d,i:i + ker_x, j:j + ker_x]
                 
-                f_Img[k, i, j] = result
+                    result = np.sum(region * kernel)
+                    
+                    f_Img[k,d, i, j] += result
             
     return f_Img
     
