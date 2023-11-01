@@ -135,7 +135,8 @@ def conv2(img, kers, verbose=True):
             for i in range(img_y):
                 for j in range(img_x):
                     region = padded_image[d,i:i + ker_x, j:j + ker_x]
-                
+                    #do I need to sum with some axis.  It seems like our region pulls us into one of our dimensions
+                    #so why would me need to do anything but sum across the element wise operated matrix
                     result = np.sum(region * kernel)
                     
                     f_Img[k,d, i, j] += result
