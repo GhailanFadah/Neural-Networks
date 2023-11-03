@@ -79,7 +79,6 @@ def conv2_gray(img, kers, verbose=True):
             
     return f_Img
 
-
 def conv2(img, kers, verbose=True):
     '''Does a 2D convolution operation on COLOR or grayscale `img` using kernels `kers`.
     Uses 'same' boundary conditions.
@@ -123,11 +122,14 @@ def conv2(img, kers, verbose=True):
     
     padding = math.ceil((ker_x - 1) /2)
 
-    padded_image = np.zeros((n_chan, img_y+2*padding, img_x+2*padding))
-    padded_image[:, padding:padding + img_y, padding:padding + img_x] = img
+    padded_img = np.pad(img,( (0,0), (padding, padding), (padding, padding)))
 
-    
-    
+    if verbose:
+        print("f_Img shape; ",f_Img.shape)
+        print("img shape:",img.shape)
+        print("padding: ",padding)
+        print("padded_image shape:",padded_img.shape)
+
     for k in range(n_kers):
         #we do this for each kernel
         kernel = kers[k]
@@ -135,7 +137,7 @@ def conv2(img, kers, verbose=True):
         for i in range(img_y):
             for j in range(img_x):
                 #step into region
-                region = padded_image[:,i:i + ker_y, j:j + ker_x]
+                region = padded_img[:,i:i + ker_y, j:j + ker_x]
                 #do I need to sum with some axis.  It seems like our region pulls us into one of our dimensions
                 #so why would me need to do anything but sum across the element wise operated matrix
                 result = np.sum(region * kernel, axis = (1,2))
@@ -194,6 +196,32 @@ def conv2nn(imgs, kers, bias, verbose=True):
     if n_chans != n_ker_chans:
         print('Number of kernel channels doesnt match input num channels!')
         return
+    
+    f_Imgs = np.zeros((batch_sz, n_kers, img_y, img_x))
+    
+    padding = math.ceil((ker_x - 1) /2)
+
+    padded_imgs = np.pad(imgs,((0,0),(0,0), (padding, padding), (padding, padding)))
+
+    if verbose:
+        print("f_Img shape; ",f_Imgs.shape)
+        print("img shape:",imgs.shape)
+        print("padding: ",padding)
+        print("padded_image shape:",padded_imgs.shape)
+
+    for img in range(batch_sz):
+        for k in range(n_kers):
+            #we do this for each kernel
+            kernel = kers[k]
+            kernel = np.flipud(np.fliplr(kernel))
+            for i in range(img_y):
+                for j in range(img_x):
+                    #step into region
+                    region = padded_imgs[img,:,i:i + ker_y, j:j + ker_x]
+                    result = np.sum(region * kernel) #will be n_channels
+                    f_Imgs[img,k, i, j] -= result - bias[k]
+                
+    return f_Imgs
 
 
 def get_pooling_out_shape(img_dim, pool_size, strides):
@@ -210,7 +238,8 @@ def get_pooling_out_shape(img_dim, pool_size, strides):
     int. The size in pixels of the output of the image after max pooling is applied, in the dimension
         img_dim.
     '''
-    pass
+
+    return int(np.floor((img_dim - pool_size) / strides) + 1)
 
 
 def max_pool(inputs, pool_size=2, strides=1, verbose=True):
@@ -240,7 +269,21 @@ def max_pool(inputs, pool_size=2, strides=1, verbose=True):
     - You may need to keep track of and update indices for both the input and output images
     - Overall, this should be a simpler implementation than `conv2_gray`
     '''
-    pass
+    
+    img_y, img_x = inputs.shape
+
+    out_dims = get_pooling_out_shape(img_y, pool_size, strides),get_pooling_out_shape(img_x, pool_size, strides)
+
+    output = np.zeros((out_dims[0], out_dims[1]))
+    print(output.shape)
+
+    for i in range(out_dims[0]):
+        for j in range(out_dims[1]):
+            region = inputs[strides*i:strides*i + pool_size, strides*j:strides*j + pool_size]
+            output[i,j] = np.max(region)
+
+    
+    return output
 
 
 def max_poolnn(inputs, pool_size=2, strides=1, verbose=True):
@@ -271,3 +314,18 @@ def max_poolnn(inputs, pool_size=2, strides=1, verbose=True):
     - If you added additional nested loops, be careful when you reset your input image indices
     '''
     mini_batch_sz, n_chans, img_y, img_x = inputs.shape
+
+    #we can do this vectorized
+
+    out_dims =mini_batch_sz, n_chans, get_pooling_out_shape(img_y, pool_size, strides),get_pooling_out_shape(img_x, pool_size, strides)
+
+    output = np.zeros((mini_batch_sz, n_chans, out_dims[2], out_dims[3]))
+    print(output.shape)
+
+    for i in range(out_dims[2]):
+        for j in range(out_dims[3]):
+            region = inputs[:,:,strides*i:strides*i + pool_size, strides*j:strides*j + pool_size]
+            output[:,:,i,j] = np.max(region, axis = (2,3))
+
+    
+    return output
