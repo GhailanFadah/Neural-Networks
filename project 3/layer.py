@@ -186,7 +186,7 @@ class Layer:
         A COPY (not a reference) of net_act.
         '''
         self.input = inputs
-        self.net_in = self.input @ self.wts + self.b
+        self.compute_net_in()
         if(self.activation == "linear"):
             self.linear()
         elif(self.activation == "relu"):
@@ -315,16 +315,20 @@ class Layer:
         '''
         if self.activation == 'relu':
             # TODO: call/compute correct act function here
-            pass
+            self.relu()
+            
         elif self.activation == 'linear':
             # TODO: call/compute correct act function here
-            pass
+            self.linear()
+            
         elif self.activation == 'softmax':
             # TODO: call/compute correct act function here
-            pass
+            self.softmax()
+            
         else:
             # TODO: throw error if activation function string invalid.
-            pass
+            return "not a valid act function"
+            
 
     def backward_netAct_to_netIn(self, d_upstream, y):
         '''Calculates the gradient `d_net_in` for the current layer.
@@ -466,10 +470,10 @@ class Conv2D(Layer):
         have shape=(n_kers, n_chans, ker_sz, ker_sz).
         2. Initialize this layer's bias in the same way. shape=(n_kers,)
         '''
+        super().__init__(number, name, activation=activation, reg=reg, verbose=verbose)
         self.wts = np.reshape(np.random.normal(0, wt_scale, n_kers*n_chans*ker_sz*ker_sz ),(n_kers, n_chans, ker_sz, ker_sz))
         self.b = np.reshape(np.random.normal(0, wt_scale,n_kers ),(n_kers,))
-        super().__init__(number, name, activation=activation, reg=reg, verbose=verbose)
-        pass
+        
 
     def compute_net_in(self):
         '''Computes `self.net_in` via convolution.
@@ -491,7 +495,9 @@ class Conv2D(Layer):
         This should be an easy one-liner, you've done all the hard work last week :)
         '''
         
-        pass
+        self.net_in = filter_ops.conv2nn(self.input, self.wts, self.b)
+        
+        
 
     def backward_netIn_to_prevLayer_netAct(self, d_upstream):
         '''Computes backward `dprev_net_act`, `d_wts`, d_b` gradients that gets us
