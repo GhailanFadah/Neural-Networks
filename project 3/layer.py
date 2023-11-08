@@ -682,7 +682,20 @@ class MaxPooling2D(Layer):
             print(f'n_chans do not match! {n_chans} != {n_chans_d}')
             exit()
 
-        pass
+        
+        #we initialize zeros in shape of d_net_in (and input):
+        dprev_net_act = np.zeros((mini_batch_sz_d, n_chans_d, img_y, img_x))
+
+        # we want to now slide window around and argmax (then ind2sub).  We put returned value from d_upstream[ind2sub] into dprev_net_act at n,d,ind2sub
+        for i in range(out_y):
+            for j in range(out_x):
+                #I look at net_in here, but may actually be net_act or self.input? I dunno how to get previous layer netact
+                region = self.net_in[:,:,self.strides*i:self.strides*i + self.pool_size, self.strides*j:self.strides*j + self.pool_size]
+                coords = self.ind2sub(np.argmax(region, axis = (2,3)), self.pool_size)#right axes?
+                #we update dprev_net_act to the upstream at i,j
+                dprev_net_act[:,:,self.strides*i:self.strides*i + self.pool_size, self.strides*j:self.strides*j + self.pool_size][coords[0], coords[1]] = d_upstream[i,j]
+
+        return dprev_net_act
 
     def ind2sub(self, linear_ind, sz):
         '''Converts a linear index to a subscript index based on the window size sz
