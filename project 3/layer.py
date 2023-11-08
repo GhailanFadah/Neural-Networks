@@ -187,12 +187,7 @@ class Layer:
         '''
         self.input = inputs
         self.compute_net_in()
-        if(self.activation == "linear"):
-            self.linear()
-        elif(self.activation == "relu"):
-            self.relu()
-        elif(self.activation == "softmax"):
-            self.softmax()
+        self.compute_net_act()
         
         return np.copy(self.net_act)
 
@@ -398,6 +393,9 @@ class Dense(Layer):
         Each unit in this layer has its own bias term.
         '''
         super().__init__(number, name, activation=activation, reg=reg, verbose=verbose)
+        self.wts = np.reshape(np.random.normal(0, wt_scale, units*n_units_prev_layer),(n_units_prev_layer, units))
+        self.b = np.reshape(np.random.normal(0, wt_scale,units ),(units,))
+        
         pass
 
     def compute_net_in(self):
@@ -411,6 +409,9 @@ class Dense(Layer):
 
         Hint: You did this in Project 0
         '''
+        
+        flat_input = np.reshape(self.input, [self.input.shape[0], np.prod(self.input[1:])])
+        self.net_in = flat_input @ self.wts + self.b
         pass
 
     def backward_netIn_to_prevLayer_netAct(self, d_upstream):
@@ -624,6 +625,7 @@ class MaxPooling2D(Layer):
         Hint:
         This should be an easy one-liner, you've done all the hard work last week :)
         '''
+        self.net_in = filter_ops.max_poolnn(self.net_act)
         pass
 
     def backward_netIn_to_prevLayer_netAct(self, d_upstream):
