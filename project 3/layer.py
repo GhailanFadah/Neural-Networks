@@ -224,6 +224,8 @@ class Layer:
         if d_upstream is None:
             d_upstream = self.compute_dlast_net_act()
             
+        
+            
             
         
         
@@ -349,18 +351,28 @@ class Layer:
         2. Implement gradient for softmax
 
         '''
+        
+        x = np.copy(d_upstream)
         if self.activation == 'relu':
             # TODO: compute correct gradient here
+            
+            x[self.net_in <= 0] = 0
+            x[self.net_in > 0] = 1
             pass
         elif self.activation == 'linear':
             # TODO: compute correct gradient here
+            x = 1
             pass
         elif self.activation == 'softmax':
             # TODO: compute correct gradient here
+            
+            x = self.net_act*(1-self.net_act)
             pass
         else:
             raise ValueError('Error! Unknown activation function ', self.activation)
-        return d_net_in
+        
+        d_net_in = d_upstream * x
+        return d_net_in 
 
 
 class Dense(Layer):

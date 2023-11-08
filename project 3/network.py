@@ -193,6 +193,13 @@ class Network:
         2. Compute and get the weight regularization via `self.wt_reg_reduce()` (implement this next)
         4. Return the sum of the loss and the regularization term.
         '''
+        
+        layer.Conv2D.compute_net_in()
+        layer.Conv2D.compute_net_act()
+        layer.MaxPooling2D.compute_net_in()
+        layer.MaxPooling2D.compute_net_act()
+        layer.Dense.compute_net_in()
+        layer.Dense.compute_net_act()
         pass
 
     def wt_reg_reduce(self):
