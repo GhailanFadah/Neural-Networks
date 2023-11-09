@@ -282,7 +282,7 @@ class ConvNet4(Network):
         n_chans, h, w = input_shape
 
         # 1) Input convolutional layer
-        first_layer = layer.Conv2D(0, "Conv", n_kers[0], n_chans, wt_scale, "relu", reg, False)
+        first_layer = layer.Conv2D(0, "Conv", n_kers[0], ker_sz[0], n_chans, wt_scale, "relu", reg, False)
 
         # 2) 2x2 max pooling layer
         second_layer = layer.MaxPooling2D(1, "Pool", pooling_sizes[0], pooling_strides[0], "linear", reg, False)
