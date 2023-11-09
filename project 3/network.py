@@ -242,6 +242,16 @@ class Network:
         '''
         pass
 
+        d_upstream = None
+        d_wts = None
+        d_b = None
+
+        for i in range(len(self.layers)):
+            current_layer = self.layers[-i]
+            #call backward: 
+            d_upstream = current_layer.backwards(d_upstream,y)
+            
+
 
 class ConvNet4(Network):
     '''
@@ -298,7 +308,10 @@ class ConvNet4(Network):
         
         fourth_layer = layer.Dense(3, "Last_Dense", n_classes, dense_interior_units[0], wt_scale, "softmax", reg, False)
         
-        self.layers.append(first_layer, second_layer, third_layer, fourth_layer)
+        self.layers.append(first_layer)
+        self.layers.append(second_layer)
+        self.layers.append(third_layer)
+        self.layers.append(fourth_layer)
         self.wt_layer_inds = [0,2,3]
 
         # self.wt_layer_inds = ???

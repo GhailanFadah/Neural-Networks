@@ -209,17 +209,19 @@ def conv2nn(imgs, kers, bias, verbose=True):
         print("padding: ",padding)
         print("padded_image shape:",padded_imgs.shape)
 
+    flipped_kers = np.flip(kers, axis=(2, 3))
+
     for img in range(batch_sz):
         for k in range(n_kers):
             #we do this for each kernel
-            kernel = kers[k]
-            kernel = np.flipud(np.fliplr(kernel))
+            # kernel = kers[k]
+            # kernel = np.flip(kernel, axis=(1, 2))#np.flipud(np.fliplr(kernel))
             for i in range(img_y):
                 for j in range(img_x):
                     #step into region
                     region = padded_imgs[img,:,i:i + ker_y, j:j + ker_x]
-                    result = np.sum(region * kernel) #will be n_channels
-                    f_Imgs[img,k, i, j] -= result - bias[k]
+                    result = np.sum(region * flipped_kers[k]) #will be n_channels
+                    f_Imgs[img,k, i, j] += result + bias[k]
                 
     return f_Imgs
 
