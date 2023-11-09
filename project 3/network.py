@@ -8,6 +8,7 @@ import time
 import numpy as np
 
 import layer
+import filter_ops
 
 
 class Network:
@@ -194,13 +195,13 @@ class Network:
         4. Return the sum of the loss and the regularization term.
         '''
         
-        layer.Conv2D.compute_net_in()
-        layer.Conv2D.compute_net_act()
-        layer.MaxPooling2D.compute_net_in()
-        layer.MaxPooling2D.compute_net_act()
-        layer.Dense.compute_net_in()
-        layer.Dense.compute_net_act()
-        pass
+        prev_ins = inputs
+        for l in self.layers:
+            prev_ins = l.forward(prev_ins)
+        loss = self.layers[-1].cross_entropy(y)
+        wt_reg = self.wt_reg_reduce()
+        return loss + wt_reg
+        
 
     def wt_reg_reduce(self):
         '''Computes the loss weight regularization for all network layers that have weights
@@ -214,6 +215,11 @@ class Network:
         The network regularization `wt_reg` is simply the sum of all the regularization terms
         for each individual layer.
         '''
+        
+        wt_reg = 0
+        for i in self.wt_layer_inds:
+            wt_reg += 0.5 * self.reg * np.sum(np.square(self.layers[i].wts))
+        return wt_reg
         pass
 
     def backward(self, y):
@@ -276,11 +282,23 @@ class ConvNet4(Network):
         n_chans, h, w = input_shape
 
         # 1) Input convolutional layer
+        first_layer = layer.Conv2D(0, "Conv", n_kers[0], n_chans, wt_scale, "relu", reg, False)
 
         # 2) 2x2 max pooling layer
+        second_layer = layer.MaxPooling2D(1, "Pool", pooling_sizes[0], pooling_strides[0], "linear", reg, False)
 
         # 3) Dense layer
+        x = filter_ops.get_pooling_out_shape(h, pooling_sizes[0], pooling_strides[0])
+        y = filter_ops.get_pooling_out_shape(h, pooling_sizes[0], pooling_strides[0])
+        
+        max_out_shape = x*y*n_kers[0]
+        third_layer = layer.Dense(2, "Dense", dense_interior_units[0], max_out_shape, wt_scale, "relu", reg, False)
 
         # 4) Dense softmax output layer
+        
+        fourth_layer = layer.Dense(3, "Last_Dense", n_classes, dense_interior_units[0], wt_scale, "softmax", reg, False)
+        
+        self.layers.append(first_layer, second_layer, third_layer, fourth_layer)
+        self.wt_layer_inds = [0,2,3]
 
         # self.wt_layer_inds = ???

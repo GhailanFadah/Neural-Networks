@@ -188,7 +188,6 @@ class Layer:
         self.input = inputs
         self.compute_net_in()
         self.compute_net_act()
-        
         return np.copy(self.net_act)
 
     def backward(self, d_upstream, y):
@@ -352,26 +351,25 @@ class Layer:
 
         '''
         
-        x = np.copy(d_upstream)
+       
         if self.activation == 'relu':
             # TODO: compute correct gradient here
             
-            x[self.net_in <= 0] = 0
-            x[self.net_in > 0] = 1
+            d_net_in = d_upstream * np.where((self.net_act == 0),0,1)
             pass
         elif self.activation == 'linear':
             # TODO: compute correct gradient here
-            x = 1
+            d_net_in = d_upstream
             pass
         elif self.activation == 'softmax':
             # TODO: compute correct gradient here
-            
-            x = self.net_act*(1-self.net_act)
+            y_one_hot = self.one_hot(y)
+            d_net_in = d_upstream * self.net_act * (y_one_hot - self.net_act)
             pass
         else:
             raise ValueError('Error! Unknown activation function ', self.activation)
         
-        d_net_in = d_upstream * x
+        
         return d_net_in 
 
 
@@ -405,8 +403,9 @@ class Dense(Layer):
         Each unit in this layer has its own bias term.
         '''
         super().__init__(number, name, activation=activation, reg=reg, verbose=verbose)
-        self.wts = np.reshape(np.random.normal(0, wt_scale, units*n_units_prev_layer),(n_units_prev_layer, units))
-        self.b = np.reshape(np.random.normal(0, wt_scale,units ),(units,))
+        self.wts = np.random.normal(0,1,(n_units_prev_layer,units)) * wt_scale
+        self.b = np.random.normal(0,1,(units,)) * wt_scale
+        
         
         pass
 
@@ -421,9 +420,10 @@ class Dense(Layer):
 
         Hint: You did this in Project 0
         '''
-        
-        flat_input = np.reshape(self.input, [self.input.shape[0], np.prod(self.input[1:])])
-        self.net_in = flat_input @ self.wts + self.b
+        A = np.prod(self.input.shape[1:])
+        B = self.input.shape[0]  
+        self.net_in = np.reshape(self.input,(B,A)) @ self.wts + self.b       
+       
         pass
 
     def backward_netIn_to_prevLayer_netAct(self, d_upstream):
@@ -484,8 +484,15 @@ class Conv2D(Layer):
         2. Initialize this layer's bias in the same way. shape=(n_kers,)
         '''
         super().__init__(number, name, activation=activation, reg=reg, verbose=verbose)
-        self.wts = np.reshape(np.random.normal(0, wt_scale, n_kers*n_chans*ker_sz*ker_sz ),(n_kers, n_chans, ker_sz, ker_sz))
-        self.b = np.reshape(np.random.normal(0, wt_scale,n_kers ),(n_kers,))
+        n_chans = int(n_chans)
+        print(type(n_chans))
+        self.wts = np.random.normal(0, 1, (n_kers,n_chans,ker_sz,ker_sz)) * wt_scale
+       
+        self.b = np.random.normal(0, 1, (n_kers,)) * wt_scale
+      
+       
+        
+       
         
 
     def compute_net_in(self):
@@ -508,7 +515,7 @@ class Conv2D(Layer):
         This should be an easy one-liner, you've done all the hard work last week :)
         '''
         
-        self.net_in = filter_ops.conv2nn(self.input, self.wts, self.b)
+        self.net_in = filter_ops.conv2nn(self.input, self.wts, self.b, self.verbose)
         
         
 
@@ -637,7 +644,7 @@ class MaxPooling2D(Layer):
         Hint:
         This should be an easy one-liner, you've done all the hard work last week :)
         '''
-        self.net_in = filter_ops.max_poolnn(self.net_act)
+        self.net_in = filter_ops.max_poolnn(self.input, self.pool_size, self.strides, self.verbose)
         pass
 
     def backward_netIn_to_prevLayer_netAct(self, d_upstream):
