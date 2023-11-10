@@ -223,6 +223,12 @@ class Layer:
         if d_upstream is None:
             d_upstream = self.compute_dlast_net_act()
             
+        d_net_in = self.backward_netAct_to_netIn(d_upstream, y)
+        dprev_net_ac, d_wts, d_b = self.backward_netIn_to_prevLayer_netAct(d_net_in)
+        self.d_wts = d_wts
+        self.d_b = d_b
+        
+            
         
             
             
@@ -350,7 +356,6 @@ class Layer:
         2. Implement gradient for softmax
 
         '''
-        
        
         if self.activation == 'relu':
             # TODO: compute correct gradient here
@@ -454,6 +459,13 @@ class Dense(Layer):
             Shape errors will frequently show up at this backprop stage, one layer down.
         -Regularize your wts
         '''
+        
+        d_wts = np.reshape(self.input, (self.input.shape[0], np.prod(self.input.shape[1:]))).T @ d_upstream + self.reg*self.wts
+        d_b = sum(d_upstream, 0)
+        dprev_net_act = d_upstream @ self.wts.T
+        dprev_net_act = np.reshape(dprev_net_act, self.input.shape)
+
+        return dprev_net_act, d_wts, d_b
         pass
 
 
@@ -484,8 +496,7 @@ class Conv2D(Layer):
         2. Initialize this layer's bias in the same way. shape=(n_kers,)
         '''
         super().__init__(number, name, activation=activation, reg=reg, verbose=verbose)
-        n_chans = int(n_chans)
-        print(type(n_chans))
+       
         self.wts = np.random.normal(0, 1, (n_kers,n_chans,ker_sz,ker_sz)) * wt_scale
        
         self.b = np.random.normal(0, 1, (n_kers,)) * wt_scale
