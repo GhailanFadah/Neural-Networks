@@ -220,7 +220,6 @@ class Network:
         for i in self.wt_layer_inds:
             wt_reg += 0.5 * self.reg * np.sum(np.square(self.layers[i].wts))
         return wt_reg
-        pass
 
     def backward(self, y):
         '''Initiates the backward pass through all the layers of the network.
@@ -248,9 +247,12 @@ class Network:
 
         for i in range(len(self.layers)):
             current_layer = self.layers[-i]
+            print(current_layer.name)
             #call backward: 
-            d_upstream = current_layer.backwards(d_upstream,y)
-            
+            d_upstream = current_layer.backward(d_upstream,y)
+
+        return None
+
 
 
 class ConvNet4(Network):

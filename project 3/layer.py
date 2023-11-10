@@ -228,6 +228,7 @@ class Layer:
         self.d_wts = d_wts
         self.d_b = d_b
         
+        return dprev_net_ac, d_wts, d_b
             
         
             
@@ -705,17 +706,19 @@ class MaxPooling2D(Layer):
         dprev_net_act = np.zeros((mini_batch_sz_d, n_chans_d, img_y, img_x))
 
         # we want to now slide window around and argmax (then ind2sub).  We put returned value from d_upstream[ind2sub] into dprev_net_act at n,d,ind2sub
-        for i in range(out_y):
-            for j in range(out_x):
-                #I look at net_in here, but may actually be net_act or self.input? I dunno how to get previous layer netact
-                region = self.net_in[:,:,self.strides*i:self.strides*i + self.pool_size, self.strides*j:self.strides*j + self.pool_size]
-                coords = self.ind2sub(np.argmax(region, axis = (2,3)), self.pool_size)#right axes?
-                #we update dprev_net_act to the upstream at i,j
-                dprev_net_act[:,:,self.strides*i:self.strides*i + self.pool_size, self.strides*j:self.strides*j + self.pool_size][coords[0], coords[1]] = d_upstream[i,j]
-
-        return dprev_net_act
+        for batch in range(mini_batch_sz):
+            for channel in range(n_chans):
+                for i in range(out_y):
+                    for j in range(out_x):
+                        #I look at net_in here, but may actually be net_act or self.input? I dunno how to get previous layer netact
+                        region = self.input[batch,channel,self.strides*i:self.strides*i + self.pool_size, self.strides*j:self.strides*j + self.pool_size]
+                        coords = self.ind2sub(np.argmax(region), self.pool_size)#right axes?
+                        #we update dprev_net_act to the upstream at i,j
+                        dprev_net_act[batch,channel,self.strides*i:self.strides*i + self.pool_size, self.strides*j:self.strides*j + self.pool_size][coords[0],coords[1]] += d_upstream[batch,channel,i,j]
+        print(dprev_net_act.shape)
+        return dprev_net_act, None, None
 
     def ind2sub(self, linear_ind, sz):
         '''Converts a linear index to a subscript index based on the window size sz
         '''
-        return np.unravel_index(linear_ind, sz)
+        return np.unravel_index(linear_ind, (sz,sz))
