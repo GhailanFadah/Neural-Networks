@@ -369,7 +369,7 @@ class Layer:
             pass
         elif self.activation == 'softmax':
             # TODO: compute correct gradient here
-            y_one_hot = self.one_hot(y)
+            y_one_hot = self.one_hot(y, self.net_act.shape[1])
             d_net_in = d_upstream * self.net_act * (y_one_hot - self.net_act)
             pass
         else:

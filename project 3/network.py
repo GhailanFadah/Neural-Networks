@@ -244,14 +244,10 @@ class Network:
         d_upstream = None
         d_wts = None
         d_b = None
+            
+        for layer in reversed(self.layers) :
+            d_upstream, d_wts, d_b = layer.backward(d_upstream, y)
 
-        for i in range(len(self.layers)):
-            current_layer = self.layers[-i]
-            print(current_layer.name)
-            #call backward: 
-            d_upstream = current_layer.backward(d_upstream,y)
-
-        return None
 
 
 
