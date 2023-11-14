@@ -48,7 +48,7 @@ class SGD(Optimizer):
         '''
         self.lr = lr
 
-    def update_weights(self):
+    def update_weights(self, verbose = False):
         '''Updates the weights according to SGD and returns a deep COPY of the
         updated weights for this time step.
 
@@ -59,7 +59,8 @@ class SGD(Optimizer):
         TODO: Write the SGD weight update rule.
         See notebook for review of equations.
         '''
-        pass
+        self.wts = self.wts - self.lr * self.d_wts
+        return np.copy(self.wts)
 
 
 class SGD_Momentum(Optimizer):
@@ -88,7 +89,12 @@ class SGD_Momentum(Optimizer):
         TODO: Write the SGD with momentum weight update rule.
         See notebook for review of equations.
         '''
-        pass
+        if self.velocity is None:
+            self.velocity = np.zeros(self.wts.shape)
+
+        self.velocity = self.m * self.velocity - self.lr*self.d_wts
+        self.wts = self.wts +self.velocity
+        return np.copy(self.wts)
 
 
 class Adam(Optimizer):
@@ -130,4 +136,19 @@ class Adam(Optimizer):
         - Remember that t should = 1 on the 1st wt update.
         - Remember to update/save the new values of v, p between updates.
         '''
-        pass
+        if self.t == 0:
+            self.v = np.zeros(self.wts.shape) #() may be wront here
+            self.p = np.zeros(self.wts.shape)
+        
+        self.t +=1    
+    
+        self.v = self.v*self.beta1 + (1-self.beta1)*self.d_wts
+        self.p = self.p * self.beta2 + (1-self.beta2) * (self.d_wts**2)
+
+        vc = self.v/(1-(self.beta1**self.t))
+        pc = self.p/(1-(self.beta2**self.t))
+
+        self.wts = self.wts - (self.lr * vc)/(np.sqrt(pc)+self.eps)
+
+
+        return np.copy(self.wts)
