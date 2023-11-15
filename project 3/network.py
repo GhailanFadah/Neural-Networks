@@ -102,6 +102,40 @@ class Network:
             train and validation accuracy).
 
         '''
+        iterations = 0
+        num_batch_loops = (x_train.shape[0]//mini_batch_sz)
+
+        for i in range(n_epochs):
+            for batch in range(num_batch_loops):
+
+                initial_time = time.time()
+                #get batch: 
+                samples = np.random.randint(0,x_train.shape[0], mini_batch_sz)
+                batch_X = x_train[samples]
+                batch_y = y_train[samples]
+
+                #now we pass batch through forward:
+
+                self.loss_history.append(self.forward(batch_X, batch_y))
+                self.backward(batch_y)
+
+                iterations +=1
+
+                for layer in self.layers:
+                    layer.update_weights()
+                
+                if iterations % print_every == 0:
+                    print("iterations number: %d ------- loss: %f", iterations, self.loss_history[-1])
+                
+                if iterations % acc_freq == 0:
+                    acc = self.accuracy(self.predict(x_validate), y_validate)
+                    print("accuracy: %f", acc)
+                
+                if iterations == 1:
+                    elapsed_time = time.time() - initial_time
+                    print("time for 0th iteration: "+str(elapsed_time) +" seconds")
+                    print("projected time to finish: "+str(num_batch_loops * elapsed_time/60) + " minutes")
+
         pass
 
     def predict(self, inputs):
@@ -119,7 +153,18 @@ class Network:
             Predicted classes (int coded) derived from the network.
         '''
         # Do a forward sweep through the network
-        pass
+        prev_ins = inputs
+        for l in self.layers:
+            prev_ins = l.forward(prev_ins)
+        #now we want to go to our output layer activations 
+        #and see what classes they are for
+
+        output = self.layers[-1]
+        activation = output.net_act
+        pred_classes = np.argmax(activation, axis = 0)
+    
+        return pred_classes
+
 
     def accuracy(self, inputs, y, samp_sz=500, mini_batch_sz=15):
         '''Computes accuracy using current net on the inputs `inputs` with classes `y`.

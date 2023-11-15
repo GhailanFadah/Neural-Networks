@@ -715,7 +715,6 @@ class MaxPooling2D(Layer):
                         coords = self.ind2sub(np.argmax(region), self.pool_size)#right axes?
                         #we update dprev_net_act to the upstream at i,j
                         dprev_net_act[batch,channel,self.strides*i:self.strides*i + self.pool_size, self.strides*j:self.strides*j + self.pool_size][coords[0],coords[1]] += d_upstream[batch,channel,i,j]
-        print(dprev_net_act.shape)
         return dprev_net_act, None, None
 
     def ind2sub(self, linear_ind, sz):

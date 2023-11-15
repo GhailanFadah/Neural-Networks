@@ -277,7 +277,6 @@ def max_pool(inputs, pool_size=2, strides=1, verbose=True):
     out_dims = get_pooling_out_shape(img_y, pool_size, strides),get_pooling_out_shape(img_x, pool_size, strides)
 
     output = np.zeros((out_dims[0], out_dims[1]))
-    print(output.shape)
 
     for i in range(out_dims[0]):
         for j in range(out_dims[1]):
@@ -322,7 +321,6 @@ def max_poolnn(inputs, pool_size=2, strides=1, verbose=True):
     out_dims =mini_batch_sz, n_chans, get_pooling_out_shape(img_y, pool_size, strides),get_pooling_out_shape(img_x, pool_size, strides)
 
     output = np.zeros((mini_batch_sz, n_chans, out_dims[2], out_dims[3]))
-    print(output.shape)
 
     for i in range(out_dims[2]):
         for j in range(out_dims[3]):
