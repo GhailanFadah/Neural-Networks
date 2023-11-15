@@ -59,7 +59,7 @@ class Network:
         for l in [self.layers[i] for i in self.wt_layer_inds]:
             l.compile(optimizer_name, **kwargs)
 
-    def fit(self, x_train, y_train, x_validate, y_validate, mini_batch_sz=100, n_epochs=10, acc_freq=10, print_every=50):
+    def fit(self, x_train, y_train, x_validate, y_validate, mini_batch_sz=100, n_epochs=10, acc_freq=100, print_every=50):
         '''Trains the neural network on data
 
         Parameters:
@@ -118,25 +118,28 @@ class Network:
 
                 self.loss_history.append(self.forward(batch_X, batch_y))
                 self.backward(batch_y)
-
                 iterations +=1
+
+                if iterations == 1:
+                    elapsed_time = time.time() - initial_time
+                    print("time for 0th iteration: "+str(elapsed_time) +" seconds")
+                    print("projected time to finish: "+str(n_epochs * num_batch_loops * elapsed_time/60) + " minutes")
+
+                
 
                 for layer in self.layers:
                     layer.update_weights()
                 
-                if iterations % print_every == 0:
-                    print("iterations number: %d ------- loss: %f", iterations, self.loss_history[-1])
+                if iterations-1 % print_every == 0:
+                    print("iterations number: "+str(iterations-1)+" ------- loss: ", self.loss_history[-1])
                 
-                if iterations % acc_freq == 0:
+                if iterations-1 % acc_freq == 0:
                     train_acc = self.accuracy(x_train, y_train)
                     val_acc = self.accuracy(x_validate, y_validate)
                     print("train accuracy: ", train_acc)
                     print("validation accuracy: ", val_acc)
                 
-                if iterations == 1:
-                    elapsed_time = time.time() - initial_time
-                    print("time for 0th iteration: "+str(elapsed_time) +" seconds")
-                    print("projected time to finish: "+str(num_batch_loops * elapsed_time/60) + " minutes")
+
 
         pass
 
