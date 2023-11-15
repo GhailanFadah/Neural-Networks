@@ -128,8 +128,8 @@ class Network:
                     print("iterations number: %d ------- loss: %f", iterations, self.loss_history[-1])
                 
                 if iterations % acc_freq == 0:
-                    acc = self.accuracy(self.predict(x_validate), y_validate)
-                    print("accuracy: %f", acc)
+                    acc = self.accuracy(x_validate, y_validate)
+                    print("accuracy: ", acc)
                 
                 if iterations == 1:
                     elapsed_time = time.time() - initial_time
@@ -152,8 +152,10 @@ class Network:
         pred_classes: ndarray. shape=shape=(num test samples)
             Predicted classes (int coded) derived from the network.
         '''
+
         # Do a forward sweep through the network
         prev_ins = inputs
+
         for l in self.layers:
             prev_ins = l.forward(prev_ins)
         #now we want to go to our output layer activations 
@@ -161,8 +163,7 @@ class Network:
 
         output = self.layers[-1]
         activation = output.net_act
-        pred_classes = np.argmax(activation, axis = 0)
-    
+        pred_classes = np.argmax(activation, axis = 1)
         return pred_classes
 
 
