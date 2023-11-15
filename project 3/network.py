@@ -128,8 +128,10 @@ class Network:
                     print("iterations number: %d ------- loss: %f", iterations, self.loss_history[-1])
                 
                 if iterations % acc_freq == 0:
-                    acc = self.accuracy(x_validate, y_validate)
-                    print("accuracy: ", acc)
+                    train_acc = self.accuracy(x_train, y_train)
+                    val_acc = self.accuracy(x_validate, y_validate)
+                    print("train accuracy: ", train_acc)
+                    print("validation accuracy: ", val_acc)
                 
                 if iterations == 1:
                     elapsed_time = time.time() - initial_time
