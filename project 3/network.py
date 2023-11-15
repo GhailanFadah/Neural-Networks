@@ -120,26 +120,25 @@ class Network:
                 self.backward(batch_y)
                 iterations +=1
 
+                for layer in self.layers:
+                    layer.update_weights()
+
                 if iterations == 1:
                     elapsed_time = time.time() - initial_time
                     print("time for 0th iteration: "+str(elapsed_time) +" seconds")
                     print("projected time to finish: "+str(n_epochs * num_batch_loops * elapsed_time/60) + " minutes")
-
                 
-
-                for layer in self.layers:
-                    layer.update_weights()
-                
-                if iterations-1 % print_every == 0:
+                if (iterations-1) % print_every == 0:
                     print("iterations number: "+str(iterations-1)+" ------- loss: ", self.loss_history[-1])
                 
-                if iterations-1 % acc_freq == 0:
+                if (iterations-1) % acc_freq == 0:
                     train_acc = self.accuracy(x_train, y_train)
                     val_acc = self.accuracy(x_validate, y_validate)
                     print("train accuracy: ", train_acc)
                     print("validation accuracy: ", val_acc)
                 
-
+        print("final loss: ", self.loss_history[-1])
+        print("final train accuracy ", self.accuracy(x_train, y_train))
 
         pass
 
