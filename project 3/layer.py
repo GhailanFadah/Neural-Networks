@@ -164,6 +164,7 @@ class Layer:
         loss: float. Mean loss over the mini-batch.
         '''
         corrects = self.net_act[np.arange(self.net_act.shape[0]), y.astype(int)]
+      
         loss = -(1/y.size)*np.sum(np.log(corrects))
         
         return loss

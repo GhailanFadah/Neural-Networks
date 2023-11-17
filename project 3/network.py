@@ -132,13 +132,15 @@ class Network:
                     print("iterations number: "+str(iterations-1)+" ------- loss: ", self.loss_history[-1])
                 
                 if (iterations-1) % acc_freq == 0:
-                    train_acc = self.accuracy(x_train, y_train)
-                    val_acc = self.accuracy(x_validate, y_validate)
-                    print("train accuracy: ", train_acc)
-                    print("validation accuracy: ", val_acc)
+                    self.train_acc_history.append(self.accuracy(x_train, y_train))
+                    self.validation_acc_history.append(self.accuracy(x_validate, y_validate))
+                    print("train accuracy: ", self.train_acc_history[-1])
+                    print("validation accuracy: ", self.validation_acc_history[-1])
                 
         print("final loss: ", self.loss_history[-1])
         print("final train accuracy ", self.accuracy(x_train, y_train))
+        
+        
 
         pass
 
