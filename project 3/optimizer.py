@@ -40,7 +40,7 @@ class Optimizer:
 class SGD(Optimizer):
     '''Update weights using Stochastic Gradient Descent (SGD) update rule.
     '''
-    def __init__(self, lr=0.1):
+    def __init__(self, lr=0.001):
         '''
         Parameters:
         -----------

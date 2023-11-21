@@ -377,7 +377,7 @@ class ConvNet4Accel(Network):
     4. Dense (net-in), soft-max (net-act).
     '''
     def __init__(self, input_shape=(3, 32, 32), n_kers=(32,), ker_sz=(7,), dense_interior_units=(100,),
-                 pooling_sizes=(2,), pooling_strides=(2,), n_classes=10, wt_scale=1e-3, reg=0, verbose=True):
+                 pooling_sizes=(2,), pooling_strides=(2,), n_classes=10, wt_scale=1e-3, reg=0.001, verbose=True):
         '''
         Parameters:
         -----------
