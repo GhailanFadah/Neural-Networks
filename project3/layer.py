@@ -128,6 +128,7 @@ class Layer:
         self.net_act = np.exp(adj_net)/np.sum(np.exp(adj_net), axis=1, keepdims=True)
         
 
+
     def loss(self, y):
         '''Computes the loss for this layer. Only should be called on the output
         layer. We assume here that the output layer will have a softmax activation
@@ -148,6 +149,7 @@ class Layer:
         if self.activation == 'softmax':
             # compute cross-entropy loss
             return self.cross_entropy(y)
+
 
     def cross_entropy(self, y):
         '''Computes UNREGULARIZED cross-entropy loss.
@@ -230,13 +232,7 @@ class Layer:
         self.d_b = d_b
         
         return dprev_net_ac, d_wts, d_b
-            
-        
-            
-            
-        
-        
-
+      
     def compute_dlast_net_act(self):
         '''Computes the gradient of the loss function with respect to the last layer's netAct.
         If neurons in last layer are called z_k, this returns `dz_net_act`
@@ -328,7 +324,7 @@ class Layer:
         elif self.activation == 'softmax':
             # TODO: call/compute correct act function here
             self.softmax()
-            
+
         else:
             # TODO: throw error if activation function string invalid.
             return "not a valid act function"
@@ -722,3 +718,102 @@ class MaxPooling2D(Layer):
         '''Converts a linear index to a subscript index based on the window size sz
         '''
         return np.unravel_index(linear_ind, (sz,sz))
+
+class UpConvolution(Layer):
+    def __init__(self, number, name, n_kers, ker_sz, n_chans=3, wt_scale=0.01, activation='linear', reg=0, verbose=True):
+        super().__init__(number, name, activation=activation, reg=reg, verbose=verbose)
+       
+        self.wts = np.random.normal(0, 1, (n_kers, n_chans, ker_sz, ker_sz)) * wt_scale
+        self.b = np.random.normal(0, 1, (n_kers,)) * wt_scale
+
+    def compute_net_in(self):
+        self.net_in = filter_ops.conv2nn_transpose(self.input, self.wts, self.b, self.verbose)
+        if self.verbose: 
+            print(self.net_in.shape)
+        
+    def backward_netIn_to_prevLayer_netAct(self, d_upstream):
+        # the backward pass of upconvolution is just convolution
+        
+        batch_sz, n_chans, img_y, img_x = self.input.shape
+        n_kers, n_ker_chans, ker_x, ker_y = self.wts.shape
+
+        if ker_x != ker_y:
+            print('Kernels must be square!')
+            return
+
+        if n_chans != n_ker_chans:
+            print('Number of kernel channels doesnt match input num channels!')
+            return
+
+        ker_sz = ker_x
+
+        # flip the kernels for transposed convolution
+        kers = self.wts[:, :, ::-1, ::-1]
+
+        # Compute the padding for 'same' output
+        p_x = int(np.ceil((ker_sz - 1) / 2))
+        p_y = int(np.ceil((ker_sz - 1) / 2))
+
+        # Pad the input images
+        input_padded = np.zeros([batch_sz, n_chans, img_y + 2*p_y, img_x + 2*p_x])
+        img_y_p, img_x_p = input_padded.shape[2:]
+
+        # Embed the input image data into the padded images
+        input_padded[:, :, p_y:img_y+p_y, p_x:img_x+p_x] = self.input
+
+        # batch_sz, n_chans, img_y+p_y, img_x+p_x
+        dprev_net_act = np.zeros_like(input_padded)
+        # wts: n_kers, n_ker_chans, ker_x, ker_y
+        d_wts = np.zeros_like(self.wts)
+
+        for n in range(batch_sz):
+            for k in range(n_kers):
+                for y in range(img_y):
+                    for x in range(img_x):
+                        dprev_net_act[n, :, y:y+ker_sz, x:x+ker_sz] += d_upstream[n, k, y, x] * kers[k]
+                        d_wts[k] += d_upstream[n, k, y, x] * input_padded[n, :, y:y+ker_sz, x:x+ker_sz]
+
+        d_b = np.sum(d_upstream, axis=(0, 2, 3))
+
+        # regularize the weight gradient
+        d_wts += self.reg * self.wts
+
+        # return the central part of the transposed convolution
+        dprev_net_act = dprev_net_act[:, :, p_y:img_y+p_y, p_x:img_x+p_x]
+
+        return dprev_net_act, d_wts, d_b
+
+class CopyAndConcat(Layer):
+    #we don't care about weights or biases here!
+    #
+    def __init__(self, number, name, axis=2, verbose=True):
+        self.number = number
+        self.name = name
+        self.axis = axis
+        self.verbose = verbose
+        self.primary_input = None
+        self.concat_input = None
+        self.output = None
+
+    def set_inputs(self, primary_input, concat_input):
+        self.primary_input = primary_input
+        self.concat_input = concat_input
+        if self.verbose: 
+            print(self.primary_input.shape, self.concat_input.shape)
+
+    def compute_net_in(self):
+        # Copy the primary input
+        self.output = np.copy(self.primary_input)
+
+        # Concatenate the additional input
+        self.output = np.concatenate([self.output, self.concat_input], axis=self.axis)
+
+    def backward_netIn_to_prevLayer_netAct(self, d_upstream):
+        # Split the gradient to send to each input
+        split_grads = np.split(d_upstream, [self.primary_input.shape[self.axis]], axis=self.axis)
+
+        # Gradients for primary input and concat input
+        dprev_net_act = split_grads[0]
+
+        return dprev_net_act, None, None
+    

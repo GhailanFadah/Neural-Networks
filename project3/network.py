@@ -429,3 +429,92 @@ class ConvNet4Accel(Network):
         self.wt_layer_inds = [0,2,3]
 
         # self.wt_layer_inds = ???
+
+
+class EncoderDecoderSmall(Network):
+    #Makes a single encoding-decoding network with the following layers:
+
+    #1. Input (16,16,1)
+    #2. Conv2dAccel (16,16,16) with 16 3x3 kernals
+    #3. Conv2dAccel (16,16,16) with 16 3x3 kernals
+    #4. max-poolingAccel 2x2 (8,8,16) 
+    #5. Conv2dAccel (8,8,32) with 32 3x3 kernals
+    #6. Conv2dAccel (8,8,32) with 32 3x3 kernals
+    #7. transposed convolution? (16,16,16)
+    #8. ---- Copy and Concat from step 3. -----> (16,16,32)
+    #9. Conv2dAccel (16,16,16) with 16 3x3 kernals ____ Do we want to use more kernals
+    #10. Conv2dAccel (16,16,16) with 16 3x3 kernals
+    #11. Dense (16,16,1) actually a conv2d with a 1x1 kernal ? 
+
+    def __init__(self, wt_scale=1e-3, reg=0.001, verbose=True):
+        
+        super().__init__(reg, verbose)
+    
+        #1. Input:
+        n_chans = 1
+        n_classes = 3
+        n_kers = (16,32,16,2)
+        ker_sz = (3,)
+        pooling_sizes = (2,)
+        pooling_strides = (2,) #could be 1 not sure.
+
+
+        #2. Conv2d
+        second_layer = layer.Conv2D(0, "Conv", n_kers[0], ker_sz[0], n_chans, wt_scale, "relu", reg, verbose)
+
+        #3. Conv2d
+        third_layer = layer.Conv2D(1, "Conv", n_kers[0], ker_sz[0], n_kers[0], wt_scale, "relu", reg, verbose)
+
+        #4. max-pooling
+        fourth_layer = layer.MaxPooling2D(2, "Pool", pooling_sizes[0], pooling_sizes[0], "linear", reg, verbose)
+
+        #5. Conv2d
+
+        fifth_layer = layer.Conv2D(3, "Conv", n_kers[1], ker_sz[0],n_kers[0], wt_scale, "relu", reg, verbose)
+
+        #6. Conv2d
+
+        sixth_layer = layer.Conv2D(4, "Conv", n_kers[1], ker_sz[0], n_kers[1], wt_scale, "relu", reg, verbose)
+
+        #7. Upconvolution
+
+        seventh_layer = layer.UpConvolution(5, "UpConv",n_kers[1], 2, n_kers[1], wt_scale, 'linear', reg, verbose) #not sure about the number of kernals here
+
+        
+        #8. CopyAndConcat
+
+        #eighth_layer = layer.CopyAndConcat(6,"CopyAndConcat",verbose = verbose) #concats across channel dimension so we will have n_kers_in*2
+
+        #9. Conv2d
+
+        ninth_layer = layer.Conv2D(6, "Conv", n_kers[2], ker_sz[0], n_kers[1], wt_scale, "relu", reg, verbose)
+
+        #10. Conv2d
+
+        tenth_layer =  layer.Conv2D(7, "Conv", n_kers[2], ker_sz[0], n_kers[2], wt_scale, "relu", reg, verbose)
+
+        #11. Dense Maybe add a second dense
+        size = 16*16*16
+        eleventh_layer =  layer.Dense(8, "Dense",n_classes, size, wt_scale, "softmax",reg, verbose)
+
+   
+        self.layers.append(second_layer)
+        self.layers.append(third_layer)
+        self.layers.append(fourth_layer)
+        self.layers.append(fifth_layer)
+        self.layers.append(sixth_layer)
+        self.layers.append(seventh_layer)
+       # self.layers.append(eighth_layer)
+        self.layers.append(ninth_layer)
+        self.layers.append(tenth_layer)
+        self.layers.append(eleventh_layer)
+        self.wt_layer_inds = [0,1,3,4,5,6,7,8] 
+
+
+
+
+
+
+
+
+

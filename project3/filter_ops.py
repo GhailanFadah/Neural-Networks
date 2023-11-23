@@ -329,3 +329,54 @@ def max_poolnn(inputs, pool_size=2, strides=1, verbose=True):
 
     
     return output
+
+
+def conv2nn_transpose(input, wts, b, verbose=False):
+    """
+    Transposed convolution operation.
+
+    Parameters:
+    -----------
+    input: ndarray. Input data. shape=(batch_sz, n_chans, img_y, img_x)
+    wts: ndarray. Filter weights. shape=(n_kers, n_ker_chans, ker_sz, ker_sz)
+    b: ndarray. Bias. shape=(n_kers,)
+    verbose: bool. Whether to print debug info.
+
+    Returns:
+    -----------
+    net_in: ndarray. Output of the transposed convolution. shape=(batch_sz, n_kers, out_y, out_x)
+    """
+    batch_sz, n_chans, img_y, img_x = input.shape
+    n_kers, n_ker_chans, ker_sz, _ = wts.shape
+
+    if verbose:
+        print("conv2nn_transpose:")
+        print(f'batch_sz={batch_sz}, n_chan={n_chans}, img_x={img_y}, img_y={img_x}')
+        print(f'n_kers={n_kers}, n_ker_chans={n_ker_chans}, ker_sz={ker_sz}')
+
+    # Compute the padding for 'same' output
+    p_y = ker_sz - 1
+    p_x = ker_sz - 1
+
+    # Output size
+    out_y = img_y * 2
+    out_x = img_x * 2
+
+    # Initialize the output with zeros
+    net_in = np.zeros((batch_sz, n_kers, out_y, out_x))
+
+    for n in range(batch_sz):
+        for k in range(n_kers):
+            for y in range(img_y):
+                for x in range(img_x):
+                        # When the filter is aligned with input position (x, y), accumulate
+                        # the filter's weights – all globally weighted by the upstream gradient
+                        # at the current (x, y) position.
+                        net_in[n, :, y:y+ker_sz, x:x+ker_sz] += input[n, k, y, x] * wts[k]
+
+
+    # Add bias
+    for k in range(n_kers):
+        net_in[:, k, :, :] += b[k]
+
+    return net_in
