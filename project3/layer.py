@@ -148,7 +148,7 @@ class Layer:
         '''
         if self.activation == 'softmax':
             # compute cross-entropy loss
-            return self.cross_entropy(y)
+            return self.segmentation_cross_entropy(y)
 
 
     def cross_entropy(self, y):
@@ -165,10 +165,32 @@ class Layer:
         -----------
         loss: float. Mean loss over the mini-batch.
         '''
+
+
+        if self.name == "Conv_Out":
+            loss = self.segmentation_cross_entropy(y)
+            return loss
+        
         corrects = self.net_act[np.arange(self.net_act.shape[0]), y.astype(int)]
-      
         loss = -(1/y.size)*np.sum(np.log(corrects))
         
+        return loss
+    
+    def segmentation_cross_entropy(self,y):
+        '''
+        Computes unregularized cross entropy like before, but for segmentation (labels are of size (B,n_classes,imgx,imgy))
+        '''
+        # One-hot encode the ground truth labels
+        num_classes = self.net_act.shape[1]
+        y_one_hot = np.eye(num_classes)[y]
+
+        # Reshape the ground truth and predicted masks to have shape (B*imgx*imgy, n_classes)
+        y_true_reshaped = y_one_hot.reshape((-1, num_classes))
+        y_pred_reshaped = self.net_act.reshape((-1, num_classes))
+
+        # Calculate cross-entropy loss
+        loss = -np.mean(np.sum(y_true_reshaped * np.log(y_pred_reshaped + 1e-15), axis=1))
+
         return loss
 
     def forward(self, inputs):
@@ -733,7 +755,7 @@ class UpConvolution(Layer):
         
     def backward_netIn_to_prevLayer_netAct(self, d_upstream):
         # the backward pass of upconvolution is just convolution
-        
+
         batch_sz, n_chans, img_y, img_x = self.input.shape
         n_kers, n_ker_chans, ker_x, ker_y = self.wts.shape
 
@@ -745,42 +767,12 @@ class UpConvolution(Layer):
             print('Number of kernel channels doesnt match input num channels!')
             return
 
-        ker_sz = ker_x
+        ## Here, I would implement waht is essentially convolution to get dprev_net_act. 
 
-        # flip the kernels for transposed convolution
-        kers = self.wts[:, :, ::-1, ::-1]
-
-        # Compute the padding for 'same' output
-        p_x = int(np.ceil((ker_sz - 1) / 2))
-        p_y = int(np.ceil((ker_sz - 1) / 2))
-
-        # Pad the input images
-        input_padded = np.zeros([batch_sz, n_chans, img_y + 2*p_y, img_x + 2*p_x])
-        img_y_p, img_x_p = input_padded.shape[2:]
-
-        # Embed the input image data into the padded images
-        input_padded[:, :, p_y:img_y+p_y, p_x:img_x+p_x] = self.input
-
-        # batch_sz, n_chans, img_y+p_y, img_x+p_x
-        dprev_net_act = np.zeros_like(input_padded)
-        # wts: n_kers, n_ker_chans, ker_x, ker_y
-        d_wts = np.zeros_like(self.wts)
-
-        for n in range(batch_sz):
-            for k in range(n_kers):
-                for y in range(img_y):
-                    for x in range(img_x):
-                        dprev_net_act[n, :, y:y+ker_sz, x:x+ker_sz] += d_upstream[n, k, y, x] * kers[k]
-                        d_wts[k] += d_upstream[n, k, y, x] * input_padded[n, :, y:y+ker_sz, x:x+ker_sz]
-
-        d_b = np.sum(d_upstream, axis=(0, 2, 3))
-
-        # regularize the weight gradient
-        d_wts += self.reg * self.wts
-
-        # return the central part of the transposed convolution
-        dprev_net_act = dprev_net_act[:, :, p_y:img_y+p_y, p_x:img_x+p_x]
-
+        #I would also have to figure out how to get d_wts and d_b which I have not yet.
+        dprev_net_act = None
+        d_wts = None
+        d_b = None
         return dprev_net_act, d_wts, d_b
 
 class CopyAndConcat(Layer):
@@ -802,18 +794,19 @@ class CopyAndConcat(Layer):
             print(self.primary_input.shape, self.concat_input.shape)
 
     def compute_net_in(self):
-        # Copy the primary input
+        # take the real input
         self.output = np.copy(self.primary_input)
 
-        # Concatenate the additional input
+        # concat input from previous layer passed through
         self.output = np.concatenate([self.output, self.concat_input], axis=self.axis)
 
     def backward_netIn_to_prevLayer_netAct(self, d_upstream):
-        # Split the gradient to send to each input
+        #  all we need to do is take the side which came from the previous layer.  
         split_grads = np.split(d_upstream, [self.primary_input.shape[self.axis]], axis=self.axis)
 
-        # Gradients for primary input and concat input
+        # just take the guy we want
         dprev_net_act = split_grads[0]
 
+        #again, no weight or bias change since this is more of an algorithm than a function of wts and biases.
         return dprev_net_act, None, None
     

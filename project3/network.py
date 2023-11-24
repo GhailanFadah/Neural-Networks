@@ -493,9 +493,9 @@ class EncoderDecoderSmall(Network):
 
         tenth_layer =  layer.Conv2D(7, "Conv", n_kers[2], ker_sz[0], n_kers[2], wt_scale, "relu", reg, verbose)
 
-        #11. Dense Maybe add a second dense
-        size = 16*16*16
-        eleventh_layer =  layer.Dense(8, "Dense",n_classes, size, wt_scale, "softmax",reg, verbose)
+        #11. Conv2d with 1x1 filter
+        
+        eleventh_layer =  layer.Conv2D(8, "Conv_Out", n_classes,1,16, wt_scale, "softmax",reg, verbose)
 
    
         self.layers.append(second_layer)
