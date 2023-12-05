@@ -24,7 +24,12 @@ def load_pretrained_net(net_name='vgg19'):
     NOTE: Pretrained net should NOT be trainable and NOT include the output layer.
     '''
     if net_name == 'vgg19':
-        pass
+        pretrained_net = tf.keras.applications.VGG19(include_top=False)
+        pretrained_net.trainable = False
+        return pretrained_net
+    
+    
+    
 
 
 def get_all_layer_strs(pretrained_net):
@@ -38,7 +43,12 @@ def get_all_layer_strs(pretrained_net):
     -----------
     Python list of str. Length is the number of layers in the pretrained network.
     '''
-    pass
+    
+    layer_names = []
+    for layer in pretrained_net.layers:
+        layer_names.append(layer.name)
+    return layer_names
+    
 
 
 def filter_layer_strs(layer_names, match_str='conv4'):
@@ -53,7 +63,13 @@ def filter_layer_strs(layer_names, match_str='conv4'):
     -----------
     Python list of str. The list of layers from `layer_names` that include the string `match_str`
     '''
-    pass
+    desired_layers = []
+    for layer in layer_names:
+        if match_str in layer:
+            desired_layers.append(layer)
+            
+    return desired_layers
+    
 
 
 def preprocess_image2tf(img, as_var):
@@ -70,7 +86,16 @@ def preprocess_image2tf(img, as_var):
 
     NOTE: Notice the addition of the leading singleton batch dimension in the tf tensor returned.
     '''
-    pass
+    
+    if as_var:
+        raw = tf.Variable(img/255, dtype="float32", trainable=True)
+        batch_img = tf.expand_dims(raw, 0)
+        
+    else:
+        raw = tf.constant(img/255, dtype="float32")
+        batch_img = tf.expand_dims(raw, 0)
+        
+    return batch_img
 
 
 def make_readout_model(pretrained_net, layer_names):
@@ -88,7 +113,14 @@ def make_readout_model(pretrained_net, layer_names):
     tf.keras.Model object (readout model) that provides a readout of the netAct values in the selected layer list
         (`layer_names`).
     '''
-    pass
+    
+    readout_net_acts = []
+    for layer in pretrained_net.layers:
+        if layer.name in layer_names:
+            readout_net_acts.append(pretrained_net.get_layer(layer.name).output)
+       
+    
+    return tf.keras.Model(inputs=pretrained_net.input, outputs=readout_net_acts)
 
 
 def tf2image(tensor):
