@@ -30,6 +30,10 @@ class DeepDream:
         2. Make an readout model for the selected layers (use function in `tf_util`) and assign it as an instance variable.
         '''
         self.loss_history = None
+        self.net = pretrained_net
+        self.numLayers = len(selected_layers_names)
+        self.readoutModel = tf_util.make_readout_model(pretrained_net, selected_layers_names)
+        
 
     def loss_layer(self, layer_net_acts):
         '''Computes the contribution to the total loss from the current layer with netAct values `layer_net_acts`. The
@@ -44,6 +48,7 @@ class DeepDream:
         -----------
         loss component from current layer. float. Mean of all the netAct values in the current layer.
         '''
+        return tf.reduce_mean(layer_net_acts)
         pass
 
     def forward(self, gen_img, standardize_grads=True, eps=1e-8):
@@ -70,7 +75,29 @@ class DeepDream:
         Then:
         - Obtain the tracked gradients of the loss with respect to the generated image.
         '''
-        pass
+        
+        
+        with tf.GradientTape(persistent=True) as tape:
+            netActs = self.readoutModel(gen_img)
+        
+            loss = 0
+            for act in netActs:
+                loss += self.loss_layer(act)
+                
+            loss = loss/ self.numLayers
+            
+                
+        grads = tape.gradient(loss, gen_img)
+        
+        
+        if standardize_grads:
+            grads = (grads - tf.math.reduce_mean(grads))/(tf.math.reduce_std(grads) + eps)
+            
+        return loss, grads
+            
+        
+        
+       
 
     def fit(self, gen_img, n_epochs=26, lr=0.01, print_every=25, plot=True, plot_fig_sz=(5, 5), export=True):
         '''Iteratively modify the generated image (`gen_img`) for `n_epochs` with the image gradients using the
@@ -109,13 +136,26 @@ class DeepDream:
         - Clipping is different than normalization!
         '''
         self.loss_history = []
+        
+        for epoch in range(n_epochs):
+            loss, grads = self.forward(gen_img)
+            self.loss_history.append(loss)
+            gen_img.assign_add(grads*lr)
+            gen_img.assign(tf.clip_by_value(gen_img, clip_value_min=0, clip_value_max=1))
+            if plot:
+                image = tf_util.tf2image(gen_img)
+                fig = plt.figure(figsize=plot_fig_sz)
+                plt.imshow(image)
+                plt.xticks([])
+                plt.yticks([])
+                plt.show()
+               
+                
+                
+        return self.loss_history
+            
 
-                # if plot:
-                #     fig = plt.figure(figsize=plot_fig_sz)
-                #     plt.imshow(image)
-                #     plt.xticks([])
-                #     plt.yticks([])
-                #     plt.show()
+        
 
     def fit_multiscale(self, gen_img, n_scales=4, scale_factor=1.3, n_epochs=26, lr=0.01, print_every=1, plot=True,
                        plot_fig_sz=(5, 5), export=True):

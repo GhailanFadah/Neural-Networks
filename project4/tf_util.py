@@ -134,6 +134,7 @@ def tf2image(tensor):
     -----------
     PIL Image object. dtype=uint8. shape=(Iy, Ix, n_chans). Image representation of the input tensor with pixel values
         between 0 and 255 (unsigned ints).
+        
 
     NOTE:
     - Scale pixel values to the range [0, 255] BEFORE converting to uint8 dtype.
@@ -144,4 +145,12 @@ def tf2image(tensor):
     https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.fromarray
     '''
     # don't want to do tf.assign here because we would modify the gen_image in memory
+    
+    scale_ten = tensor*255
+    tf.squeeze(scale_ten)
+    array = np.array(scale_ten).astype(np.uint8)
+    
+    img = Image.fromarray(array)
+    
+    return img
     pass
