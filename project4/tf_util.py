@@ -147,7 +147,8 @@ def tf2image(tensor):
     # don't want to do tf.assign here because we would modify the gen_image in memory
     
     scale_ten = tensor*255
-    tf.squeeze(scale_ten)
+    #print(scale_ten)
+    scale_ten = tf.squeeze(scale_ten)
     array = np.array(scale_ten).astype(np.uint8)
     
     img = Image.fromarray(array)

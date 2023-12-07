@@ -136,19 +136,29 @@ class DeepDream:
         - Clipping is different than normalization!
         '''
         self.loss_history = []
-        
+       
         for epoch in range(n_epochs):
+            
+            initial_time = time.time()
             loss, grads = self.forward(gen_img)
             self.loss_history.append(loss)
             gen_img.assign_add(grads*lr)
             gen_img.assign(tf.clip_by_value(gen_img, clip_value_min=0, clip_value_max=1))
             if plot:
-                image = tf_util.tf2image(gen_img)
-                fig = plt.figure(figsize=plot_fig_sz)
-                plt.imshow(image)
-                plt.xticks([])
-                plt.yticks([])
-                plt.show()
+                if (epoch) % print_every == 0:
+                    image = tf_util.tf2image(gen_img)
+                    fig = plt.figure(figsize=plot_fig_sz)
+                    plt.imshow(image)
+                    plt.xticks([])
+                    plt.yticks([])
+                    plt.show()
+                    #if export:
+                        #image.save()
+            print("epoch " + str(epoch +1)+' / '+str(n_epochs)+ ' completed')
+            if epoch == 0:
+                    elapsed_time = time.time() - initial_time
+                    print("1 epoch took: "+str(elapsed_time) +" seconds." + "Expected runtime is:" +str(n_epochs * elapsed_time/60) + " minutes")
+                
                
                 
                 
