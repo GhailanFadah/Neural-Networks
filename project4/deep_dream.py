@@ -204,4 +204,38 @@ class DeepDream:
         3. After the first scale completes, always print out how long it took to finish the first scale and an estimate
         of how long it will take to complete all the scales (in minutes).
         '''
+
+        for i in range(n_scales):
+            #get time
+            initial_time = time.time()
+            #call fit
+            self.fit(gen_img, n_epochs, lr, print_every, False, plot_fig_sz,False)
+            print("fit :"+str(i)+"completed")
+
+            shape = gen_img.shape
+            new_y = tf.cast(shape[1]*scale_factor, tf.int32)
+            new_x =  tf.cast(shape[2]*scale_factor, tf.int32)
+
+            gen_img = tf.Variable(tf.image.resize(gen_img, size = [new_y,new_x]))
+
+            if not i:
+                #on first scale, estimate total time
+                elapsed = time.time() - initial_time
+                print("1 epoch took: "+str(elapsed) +" seconds." + "Expected runtime is:" +str(n_scales * elapsed/60) + " minutes")
+
+            if not i % print_every:
+                print("scale: "+str(i))
+                if export: 
+                    img = tf_util.tf2image(gen_img)
+                    img.save('data/scaling_'+str(i)+'.jpg')
+                if plot: 
+                    image = tf_util.tf2image(gen_img)
+                    fig = plt.figure(figsize=plot_fig_sz)
+                    plt.imshow(image)
+                    plt.xticks([])
+                    plt.yticks([])
+                    plt.show()
+        
+        return gen_img
+
         pass
