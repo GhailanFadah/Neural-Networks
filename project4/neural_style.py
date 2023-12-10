@@ -8,6 +8,7 @@ Fall 2023
 import time
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import math
 
 import tf_util
 
@@ -70,7 +71,7 @@ class NeuralStyleTransfer:
                 readout_net_acts_sty.append(self.net.get_layer(layer.name).output)
        
     
-        return tf.keras.Model(inputs=self.net.input, outputs=readout_net_acts_con), tf.keras.Model(inputs=self.net.input, outputs=readout_net_acts_sty) 
+        return (tf.keras.Model(inputs=self.net.input, outputs=readout_net_acts_con), tf.keras.Model(inputs=self.net.input, outputs=readout_net_acts_sty))
         
 
     def gram_matrix(self, A):
@@ -84,7 +85,8 @@ class NeuralStyleTransfer:
         -----------
         The Gram matrix of A. shape=(K, K).
         '''
-        pass
+        return A @ tf.transpose(A)
+        
 
     def style_loss_layer(self, gen_img_layer_net_acts, style_img_layer_net_acts):
         '''Computes the contribution of the current layer toward the overall style loss.
@@ -102,7 +104,18 @@ class NeuralStyleTransfer:
         -----------
         The style loss contribution for the current layer. float.
         '''
+      
         B, num_rows, num_cols, K = gen_img_layer_net_acts.shape.as_list()
+        gen_img_layer_net_acts = tf.reshape(gen_img_layer_net_acts, shape=(3,25))
+        style_img_layer_net_acts = tf.reshape(style_img_layer_net_acts, shape=(3,25))
+        frac = 1/(2*(math.pow(K,2)*(math.pow(num_rows,2))* math.pow(num_cols,2)))
+        print(frac)
+        G = self.gram_matrix(style_img_layer_net_acts)-self.gram_matrix(gen_img_layer_net_acts)
+        g_srt = tf.math.pow(G,2)
+        sum_g = tf.reduce_sum(g_srt)
+        print(sum_g)
+        loss  =  frac*sum_g
+        return loss
 
     def style_loss(self, gen_img_net_acts, style_img_net_acts):
         '''Computes the style loss — the average of style loss contributions across selected style layers.
