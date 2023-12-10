@@ -90,12 +90,14 @@ def preprocess_image2tf(img, as_var):
     if as_var:
         raw = tf.Variable(img/255, dtype="float32", trainable=True)
         batch_img = tf.expand_dims(raw, 0)
+        final_tf = tf.Variable(batch_img)
         
     else:
         raw = tf.constant(img/255, dtype="float32")
         batch_img = tf.expand_dims(raw, 0)
+        final_tf =tf.constant(batch_img)
         
-    return batch_img
+    return final_tf
 
 
 def make_readout_model(pretrained_net, layer_names):

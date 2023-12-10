@@ -40,6 +40,12 @@ class NeuralStyleTransfer:
 
         self.style_readout_model = None
         self.content_readout_model = None
+        self.net = pretrained_net
+        self.num_style_layers = len(style_layer_names)
+        self.num_content_layers = len(content_layer_names)
+        self.style_readout_model = self.initialize_readout_models(style_layer_names, content_layer_names)[1]
+        self.content_readout_model = self.initialize_readout_models(style_layer_names, content_layer_names)[0]
+        
 
     def initialize_readout_models(self, style_layer_names, content_layer_names):
         '''Creates and assigns style and content readout models to the instance variables self.style_readout_model and
@@ -53,7 +59,19 @@ class NeuralStyleTransfer:
             These netAct values contribute the CONTENT of the generated image.
         '''
         # Compute netAct values for selected layers with the style and content images
-        pass
+        readout_net_acts_con = []
+        for layer in self.net.layers:
+            if layer.name in content_layer_names:
+                readout_net_acts_con.append(self.net.get_layer(layer.name).output)
+                
+        readout_net_acts_sty = []
+        for layer in self.net.layers:
+            if layer.name in style_layer_names:
+                readout_net_acts_sty.append(self.net.get_layer(layer.name).output)
+       
+    
+        return tf.keras.Model(inputs=self.net.input, outputs=readout_net_acts_con), tf.keras.Model(inputs=self.net.input, outputs=readout_net_acts_sty) 
+        
 
     def gram_matrix(self, A):
         '''Computes the Gram matrix AA^T (<-- the ^T here means transpose of the A matrix on the right).
