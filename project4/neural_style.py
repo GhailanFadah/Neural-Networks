@@ -105,8 +105,8 @@ class NeuralStyleTransfer:
         '''
       
         B, num_rows, num_cols, K = gen_img_layer_net_acts.shape.as_list()
-        gen_img_layer_net_acts_re = tf.reshape(gen_img_layer_net_acts, shape=(K,-1))
-        style_img_layer_net_acts_re = tf.reshape(style_img_layer_net_acts, shape=(K,-1))
+        gen_img_layer_net_acts_re = tf.reshape(gen_img_layer_net_acts, shape=(K,B*num_rows*num_cols))
+        style_img_layer_net_acts_re = tf.reshape(style_img_layer_net_acts, shape=(K,B*num_rows*num_cols))
         
         frac = 1/(2*(math.pow(K,2)*(math.pow(num_rows,2))* math.pow(num_cols,2)))
         
@@ -230,7 +230,6 @@ class NeuralStyleTransfer:
                 
             style_loss = self.style_loss(netActs_style, style_img_net_acts)
             content_loss = self.content_loss(netActs_con, content_img_net_acts)
-            print(style_loss)
             loss = self.total_loss(style_loss, style_wt, content_loss, content_wt)
             
             
@@ -277,3 +276,41 @@ class NeuralStyleTransfer:
             Reminder: Use `assign` rather than =.
         '''
         self.loss_history = []
+        
+        #get netActs
+
+        style_net_act = self.style_readout_model(style_img)
+        con_net_act = self.content_readout_model(content_img)
+
+        #forward pass on generated image for n_epochs
+        for i in range(n_epochs):
+            loss , grads = self.forward(gen_img,style_net_act, con_net_act, style_wt, content_wt)
+            self.loss_history.append(loss)
+            
+            optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
+            optimizer.apply_gradients(zip([grads], [gen_img]))
+
+            clipped = tf.clip_by_value(gen_img, 0.0, 1.0)
+            gen_img.assign(clipped)
+
+            if not i%print_every:
+                print("epoch: "+str(i))
+                if plot or export: 
+                    image = tf_util.tf2image(gen_img)
+                    fig = plt.figure(figsize=plot_fig_sz)
+                    plt.imshow(image)
+                    plt.xticks([])
+                    plt.yticks([])
+                    if plot: 
+                        plt.show()
+                    if export:
+                        image.save('data/neural_st_'+str(i)+'.jpg')
+
+                
+                
+
+        return self.loss_history
+
+
+
+
