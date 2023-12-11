@@ -8,7 +8,6 @@ Fall 2023
 import time
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import math
 
 import tf_util
 
@@ -39,13 +38,8 @@ class NeuralStyleTransfer:
         '''
         self.loss_history = None
 
-       
-        self.net = pretrained_net
-        self.num_style_layers = len(style_layer_names)
-        self.num_content_layers = len(content_layer_names)
-        self.style_readout_model = self.initialize_readout_models(style_layer_names, content_layer_names)[1]
-        self.content_readout_model = self.initialize_readout_models(style_layer_names, content_layer_names)[0]
-        
+        self.style_readout_model = None
+        self.content_readout_model = None
 
     def initialize_readout_models(self, style_layer_names, content_layer_names):
         '''Creates and assigns style and content readout models to the instance variables self.style_readout_model and
@@ -59,19 +53,9 @@ class NeuralStyleTransfer:
             These netAct values contribute the CONTENT of the generated image.
         '''
         # Compute netAct values for selected layers with the style and content images
-        readout_net_acts_con = []
-        for layer in self.net.layers:
-            if layer.name in content_layer_names:
-                readout_net_acts_con.append(self.net.get_layer(layer.name).output)
-                
-        readout_net_acts_sty = []
-        for layer in self.net.layers:
-            if layer.name in style_layer_names:
-                readout_net_acts_sty.append(self.net.get_layer(layer.name).output)
-       
-    
-        return (tf.keras.Model(inputs=self.net.input, outputs=readout_net_acts_con), tf.keras.Model(inputs=self.net.input, outputs=readout_net_acts_sty))
+
         
+        pass
 
     def gram_matrix(self, A):
         '''Computes the Gram matrix AA^T (<-- the ^T here means transpose of the A matrix on the right).
@@ -84,8 +68,7 @@ class NeuralStyleTransfer:
         -----------
         The Gram matrix of A. shape=(K, K).
         '''
-        return A @ tf.transpose(A)
-        
+        pass
 
     def style_loss_layer(self, gen_img_layer_net_acts, style_img_layer_net_acts):
         '''Computes the contribution of the current layer toward the overall style loss.
@@ -103,22 +86,7 @@ class NeuralStyleTransfer:
         -----------
         The style loss contribution for the current layer. float.
         '''
-      
         B, num_rows, num_cols, K = gen_img_layer_net_acts.shape.as_list()
-        gen_img_layer_net_acts_re = tf.reshape(gen_img_layer_net_acts, shape=(K,-1))
-        style_img_layer_net_acts_re = tf.reshape(style_img_layer_net_acts, shape=(K,-1))
-        
-        frac = 1/(2*(math.pow(K,2)*(math.pow(num_rows,2))* math.pow(num_cols,2)))
-        
-        G_style = self.gram_matrix(style_img_layer_net_acts_re)
-        G_gen = self.gram_matrix(gen_img_layer_net_acts_re) 
-      
-        G = G_style - G_gen
-        g_srt = tf.square(G)
-        sum_g = tf.reduce_sum(g_srt)
-        
-        loss  =  frac*sum_g
-        return loss
 
     def style_loss(self, gen_img_net_acts, style_img_net_acts):
         '''Computes the style loss — the average of style loss contributions across selected style layers.
@@ -138,13 +106,7 @@ class NeuralStyleTransfer:
         -----------
         The overall style loss. float.
         '''
-        
-        frac = 1/(len(style_img_net_acts))
-        loss = 0
-        for i in range(len(style_img_net_acts)):
-            loss += self.style_loss_layer(gen_img_net_acts[i], style_img_net_acts[i])
-        
-        return (frac*loss)
+        pass
 
     def content_loss(self, gen_img_layer_act, content_img_layer_net_act):
         '''Computes the content loss.
@@ -163,13 +125,6 @@ class NeuralStyleTransfer:
         The content loss. float.
         '''
         B, num_rows, num_cols, K = gen_img_layer_act.shape.as_list()
-        
-        frac = 1/(2*K*num_cols*num_rows)
-        diff = gen_img_layer_act - content_img_layer_net_act
-        diff_squ = tf.square(diff)
-        sum_diff = tf.reduce_sum(diff_squ)
-        
-        return (frac*sum_diff)
 
     def total_loss(self, loss_style, style_wt, loss_content, content_wt):
         '''Computes the total loss, a weighted sum of the style and content losses.
@@ -187,7 +142,6 @@ class NeuralStyleTransfer:
         -----------
         The total loss. float.
         '''
-        return style_wt*loss_style + content_wt*loss_content
         pass
 
     def forward(self, gen_img, style_img_net_acts, content_img_net_acts, style_wt, content_wt):
@@ -221,22 +175,7 @@ class NeuralStyleTransfer:
         Then:
         - Obtain the tracked gradients of the loss with respect to the generated image.
         '''
-        
-        with tf.GradientTape(persistent=True) as tape:
-            netActs_style = self.style_readout_model(gen_img)
-            netActs_con = self.content_readout_model(gen_img)
-        
-            
-                
-            style_loss = self.style_loss(netActs_style, style_img_net_acts)
-            content_loss = self.content_loss(netActs_con, content_img_net_acts)
-            print(style_loss)
-            loss = self.total_loss(style_loss, style_wt, content_loss, content_wt)
-            
-            
-                
-        grads = tape.gradient(loss, gen_img)
-        return loss, grads
+        pass
 
     def fit(self, gen_img, style_img, content_img, n_epochs=200, style_wt=1e2, content_wt=1, lr=0.01,
             print_every=25, plot=True, plot_fig_sz=(5, 5), export=True):
