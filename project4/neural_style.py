@@ -105,16 +105,18 @@ class NeuralStyleTransfer:
         '''
       
         B, num_rows, num_cols, K = gen_img_layer_net_acts.shape.as_list()
-        gen_img_layer_net_acts_re = tf.reshape(gen_img_layer_net_acts, shape=(K,B*num_rows*num_cols))
-        style_img_layer_net_acts_re = tf.reshape(style_img_layer_net_acts, shape=(K,B*num_rows*num_cols))
+        gen_img_layer_net_acts_re = tf.transpose(tf.reshape(gen_img_layer_net_acts, shape=(B*num_rows*num_cols, K)))
+        style_img_layer_net_acts_re = tf.transpose(tf.reshape(style_img_layer_net_acts, shape=(B*num_rows*num_cols, K)))
         
         frac = 1/(2*(math.pow(K,2)*(math.pow(num_rows,2))* math.pow(num_cols,2)))
         
         G_style = self.gram_matrix(style_img_layer_net_acts_re)
         G_gen = self.gram_matrix(gen_img_layer_net_acts_re) 
       
-        G = G_style - G_gen
+        G =G_style - G_gen
+       
         g_srt = tf.square(G)
+        
         sum_g = tf.reduce_sum(g_srt)
         
         loss  =  frac*sum_g

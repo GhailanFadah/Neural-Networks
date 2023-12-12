@@ -152,8 +152,8 @@ class DeepDream:
                     plt.xticks([])
                     plt.yticks([])
                     plt.show()
-                    #if export:
-                        #image.save()
+                    if export:
+                        image.save('data/deep_dream_output'+str(epoch)+'.jpg')
             print("epoch " + str(epoch +1)+' / '+str(n_epochs)+ ' completed')
             if epoch == 0:
                     elapsed_time = time.time() - initial_time
