@@ -28,6 +28,12 @@ def load_pretrained_net(net_name='vgg19'):
         pretrained_net.trainable = False
         return pretrained_net
     
+    if net_name == 'xception':
+        pretrained_net = tf.keras.applications.Xception(include_top=False)
+        pretrained_net.trainable = False
+        return pretrained_net
+        
+    
     
     
 
