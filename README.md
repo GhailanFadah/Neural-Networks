@@ -18,10 +18,14 @@ A 4-layer convolutional neural network where an accuracy of 55% was obtained on 
 explores the concept of transfer learning in ML by using Tenserflow. Obtains 92% accuracy on hotdog dataset: https://www.kaggle.com/datasets/dansbecker/hot-dog-not-hot-dog. Also explores the famous Deep Dream and neural style architecture to produce cool images.
 
 <img width="641" alt="Screenshot 2024-10-26 at 3 05 13 PM" src="https://github.com/user-attachments/assets/2fd211ca-7e79-4599-9cfd-aef90617a682">
+
 Miller steps reimagined using van Gogh's Starry Night: 
+
 <img width="392" alt="Screenshot 2024-10-26 at 3 10 56 PM" src="https://github.com/user-attachments/assets/91268440-0789-42fc-ab1a-d7931acde4cc">
 <img width="399" alt="Screenshot 2024-10-26 at 3 08 12 PM" src="https://github.com/user-attachments/assets/8f92f435-4546-4721-9bb8-68a1705db240">
-Miller steps reimagined using Deep dream 
+
+Miller steps reimagined using Deep dream: 
+
 <img width="392" alt="Screenshot 2024-10-26 at 3 10 56 PM" src="https://github.com/user-attachments/assets/4920965c-d847-49b6-8cf5-08ec3b8a7a39">
 <img width="401" alt="Screenshot 2024-10-26 at 3 09 12 PM" src="https://github.com/user-attachments/assets/a688d284-45c1-48db-b70c-5e7c001d1907">
 
