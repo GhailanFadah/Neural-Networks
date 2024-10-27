@@ -29,10 +29,34 @@ Miller steps reimagined using Deep dream:
 <img width="392" alt="Screenshot 2024-10-26 at 3 10 56 PM" src="https://github.com/user-attachments/assets/4920965c-d847-49b6-8cf5-08ec3b8a7a39">
 <img width="401" alt="Screenshot 2024-10-26 at 3 09 12 PM" src="https://github.com/user-attachments/assets/a688d284-45c1-48db-b70c-5e7c001d1907">
 
-# Project 5: low level Tenserflow
+# Project 5: Low Level Tenserflow
 built a single layer network using low level tenserflow and using the GPU instead of CPU to speed computational time up. Obtaine an accuracy of ~92% on the mnist dataset: https://www.kaggle.com/datasets/hojjatk/mnist-dataset.
 
 <img width="670" alt="Screenshot 2024-10-27 at 12 45 56 AM" src="https://github.com/user-attachments/assets/d1cbe699-b1f0-4197-8687-d5b9c5cfd2df">
+
+# Project 6: Hebbian Learning
+built a bio-inspired encoder-decoder neural network architecture that utilizes both competitive and contrastive Hebbian learning -Krotov & Hopfield (2019). It performed at the state-of-art level compared to traditional artifical networks achieving an accuracy of ~95% on mnist dataset.
+
+<img width="748" alt="Screenshot 2024-10-27 at 1 18 48 AM" src="https://github.com/user-attachments/assets/d03cb874-45e9-4f1e-b9b0-2ddebd755bb6">
+
+# Project 7: NLP
+built a natural language processing model trained on IMB reviews (skip-gram). Used a self organizing map to visualize the word embeddings of the model.
+
+<img width="841" alt="Screenshot 2024-10-27 at 1 32 12 AM" src="https://github.com/user-attachments/assets/99a0ec74-f256-4c28-b673-9a610593b97f">
+
+# Project 8: Bird-song Classifier
+built a network that takes a birds song audio converts it to its waveform and classifies the bird. Obtaines an accuracy of ~87% on bird song data set: https://xeno-canto.org/?gid=1.
+
+<img width="516" alt="Screenshot 2024-10-27 at 1 43 26 AM" src="https://github.com/user-attachments/assets/812812f1-8415-4ab2-8ce9-f68b729a4f41">
+
+<img width="651" alt="Screenshot 2024-10-27 at 1 36 44 AM" src="https://github.com/user-attachments/assets/7518f45e-121a-4d5c-ae54-94fc34640252">
+<img width="540" alt="Screenshot 2024-10-27 at 1 36 31 AM" src="https://github.com/user-attachments/assets/9001fc56-8ad0-4c86-b779-37eeef627ffc">
+
+
+
+
+
+
 
 
 
