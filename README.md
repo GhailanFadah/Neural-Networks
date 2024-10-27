@@ -47,8 +47,10 @@ built a natural language processing model trained on IMB reviews (skip-gram). Us
 # Project 8: Bird-song Classifier
 built a network that takes a birds song audio converts it to its waveform and classifies the bird. Obtaines an accuracy of ~87% on bird song data set: https://xeno-canto.org/?gid=1.
 
+methodology:
 <img width="516" alt="Screenshot 2024-10-27 at 1 43 26 AM" src="https://github.com/user-attachments/assets/812812f1-8415-4ab2-8ce9-f68b729a4f41">
 
+results:
 <img width="651" alt="Screenshot 2024-10-27 at 1 36 44 AM" src="https://github.com/user-attachments/assets/7518f45e-121a-4d5c-ae54-94fc34640252">
 <img width="540" alt="Screenshot 2024-10-27 at 1 36 31 AM" src="https://github.com/user-attachments/assets/9001fc56-8ad0-4c86-b779-37eeef627ffc">
 
