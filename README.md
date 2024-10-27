@@ -29,6 +29,12 @@ Miller steps reimagined using Deep dream:
 <img width="392" alt="Screenshot 2024-10-26 at 3 10 56 PM" src="https://github.com/user-attachments/assets/4920965c-d847-49b6-8cf5-08ec3b8a7a39">
 <img width="401" alt="Screenshot 2024-10-26 at 3 09 12 PM" src="https://github.com/user-attachments/assets/a688d284-45c1-48db-b70c-5e7c001d1907">
 
+# Project 5: low level Tenserflow
+built a single layer network using low level tenserflow and using the GPU instead of CPU to speed computational time up. Obtaine an accuracy of ~92% on the mnist dataset: https://www.kaggle.com/datasets/hojjatk/mnist-dataset.
+
+<img width="670" alt="Screenshot 2024-10-27 at 12 45 56 AM" src="https://github.com/user-attachments/assets/d1cbe699-b1f0-4197-8687-d5b9c5cfd2df">
+
+
 
 
 
