@@ -1,0 +1,12 @@
+{
+    "num_neurons": 2, 
+    "v_rest": -65,
+    "v_reset": -63,
+    "v_decay_rate": 0.99,
+    "threshold": -60,
+    "refrac_period": 5,
+    "trace_decay_rate": 0.9,
+    "adaptive_decay_rate": 0.999, 
+    "adaptive_threshold": 0.5
+
+}

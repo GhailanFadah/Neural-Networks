@@ -1,0 +1,9 @@
+{
+    "input_layer": {"num_neurons": 11,  "trace_decay_rate": 0.95,
+    "num_time_steps": 350}, 
+    "recurrent_layer": { "num_neurons": 3, "trace_decay_rate": 0.95, "v_decay_rate": 0.99, "v_rest": -65,
+    "v_reset": -60, "spike_thre": -52, "voltage_decay_rate": 0.99, "refrac_period": 3, 
+    "adaptive_threshold": 0.05,  "adaptive_decay_rate": 0.999999, "gain_wts": 100, 
+    "max_wts": 0.3, "norm_wts":78.4, "wts_update_+": 0.5, "wts_update_-": 0.1}
+
+}
