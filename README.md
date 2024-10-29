@@ -62,6 +62,11 @@ built a bio-inspired spiking neural network based on spike time dependent plasti
 <img width="576" alt="Screenshot 2024-10-29 at 2 52 20 PM" src="https://github.com/user-attachments/assets/c532a8b9-05a7-44ff-a6bd-c01047d327ea">
 <img width="612" alt="Screenshot 2024-10-29 at 2 52 30 PM" src="https://github.com/user-attachments/assets/5a0f16c8-1d2b-4d37-84ab-65d0f2f3d85d">
 
+# Project 10: RNN
+built a recurrent neural network using Tenserflow trained on children's fairy tales at the character level: https://www.kaggle.com/datasets/cuddlefish/fairy-tales.
+
+<img width="654" alt="Screenshot 2024-10-29 at 3 01 17 PM" src="https://github.com/user-attachments/assets/5dfd5d46-9b0a-4e80-96d2-f031da903a65">
+<img width="994" alt="Screenshot 2024-10-29 at 3 03 54 PM" src="https://github.com/user-attachments/assets/2b8e20b3-01d7-4ce1-bd38-6ff64e6761da">
 
 
 
