@@ -45,7 +45,7 @@ built a natural language processing model trained on IMB reviews (skip-gram). Us
 <img width="841" alt="Screenshot 2024-10-27 at 1 32 12 AM" src="https://github.com/user-attachments/assets/99a0ec74-f256-4c28-b673-9a610593b97f">
 
 # Project 8: Bird-song Classifier
-built a network that takes a birds song audio converts it to its waveform and classifies the bird. Obtaines an accuracy of ~87% on bird song data set: https://xeno-canto.org/?gid=1.
+built a network that takes a birds song audio converts it to its waveform and classifies the bird using CNN. Obtaines an accuracy of ~87% on bird song data set: https://xeno-canto.org/?gid=1.
 
 methodology:
 
@@ -55,6 +55,12 @@ results:
 
 <img width="651" alt="Screenshot 2024-10-27 at 1 36 44 AM" src="https://github.com/user-attachments/assets/7518f45e-121a-4d5c-ae54-94fc34640252">
 <img width="540" alt="Screenshot 2024-10-27 at 1 36 31 AM" src="https://github.com/user-attachments/assets/9001fc56-8ad0-4c86-b779-37eeef627ffc">
+
+# Project 9: SNN
+built a bio-inspired spiking neural network based on spike time dependent plasticity (STDP). The network achieved ~85% on the mnist dataset.
+
+<img width="576" alt="Screenshot 2024-10-29 at 2 52 20 PM" src="https://github.com/user-attachments/assets/c532a8b9-05a7-44ff-a6bd-c01047d327ea">
+<img width="612" alt="Screenshot 2024-10-29 at 2 52 30 PM" src="https://github.com/user-attachments/assets/5a0f16c8-1d2b-4d37-84ab-65d0f2f3d85d">
 
 
 
